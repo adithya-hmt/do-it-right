@@ -1,16 +1,33 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { COLORS } from '@/constants/theme';
+import { TaskProvider } from '@/context/task-context';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <TaskProvider>
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: COLORS.canvas },
+          headerShown: false,
+        }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="add-task"
+          options={{
+            presentation: 'modal',
+            headerShown: true,
+            headerTitle: 'New task',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: COLORS.canvas },
+            headerTintColor: COLORS.ink,
+            headerTitleStyle: { fontWeight: '800' },
+          }}
+        />
+      </Stack>
+    </TaskProvider>
   );
 }

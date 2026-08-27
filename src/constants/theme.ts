@@ -1,65 +1,42 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import '@/global.css';
-
 import { Platform } from 'react-native';
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
+export const COLORS = {
+  canvas: '#F6F7F9',
+  surface: '#FFFFFF',
+  ink: '#18242B',
+  muted: '#71808A',
+  softMuted: '#A9B3B9',
+  line: '#E6EAEF',
+  primary: '#1976D2',
+  primarySoft: '#E6F1FC',
+  coral: '#F06A5F',
+  coralSoft: '#FDEAE7',
+  lavender: '#EAE8FF',
+  lavenderInk: '#554C9E',
+  mint: '#DDF4EA',
+  mintInk: '#2F8060',
+  amber: '#F6C86E',
+  white: '#FFFFFF',
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
+export const FONTS = Platform.select({
+  ios: { sans: 'system-ui', rounded: 'ui-rounded', mono: 'ui-monospace' },
+  web: {
+    sans: 'Inter, ui-sans-serif, system-ui, sans-serif',
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
+  default: { sans: 'normal', rounded: 'normal', mono: 'monospace' },
 });
 
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
+export const SHADOW = '0 4px 16px rgba(24, 36, 43, 0.07)';
+export const DEEP_SHADOW = '0 10px 26px rgba(24, 36, 43, 0.13)';
+
+export const RADIUS = {
+  small: 12,
+  medium: 18,
+  large: 26,
+  pill: 999,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const GUTTER = 20;
