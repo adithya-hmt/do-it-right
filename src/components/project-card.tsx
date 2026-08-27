@@ -24,7 +24,7 @@ export function ProjectCard({ project, compact = false }: { project: Project; co
         <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: project.softColor }}>
           <Text style={{ color: project.color, fontSize: 17, fontWeight: '900' }}>{project.name.slice(0, 1)}</Text>
         </View>
-        <Glyph name="dots" size={13} color={COLORS.softMuted} style={{ letterSpacing: 2 }} />
+        <Glyph name="dots" size={13} color={COLORS.softMuted} />
       </View>
       <View style={{ gap: 5 }}>
         <Text style={{ color: COLORS.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1.1 }}>{project.eyebrow}</Text>
