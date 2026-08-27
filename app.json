@@ -7,13 +7,13 @@
     "icon": "./assets/images/icon.png",
     "scheme": "doitright",
     "userInterfaceStyle": "automatic",
-      "ios": {
-        "icon": "./assets/expo.icon"
-      },
-      "android": {
-        "package": "com.adithyahmt.doitright",
-        "adaptiveIcon": {
-          "backgroundColor": "#EEE9FF",
+    "ios": {
+      "icon": "./assets/expo.icon"
+    },
+    "android": {
+      "package": "com.adithyahmt.doitright",
+      "adaptiveIcon": {
+        "backgroundColor": "#EEE9FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -47,6 +47,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a14dfa31-59f7-4b1c-914b-44e2df77a561"
+      }
+    },
+    "owner": "adithya.zz"
   }
 }
