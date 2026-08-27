@@ -1,0 +1,63 @@
+import { Tabs } from 'expo-router';
+import React from 'react';
+import type { ColorValue } from 'react-native';
+
+import { Glyph, type GlyphName } from '@/components/ui/glyph';
+import { COLORS } from '@/constants/theme';
+
+function TabIcon({ name, color }: { name: GlyphName; color: ColorValue }) {
+  return <Glyph name={name} color={color} size={19} />;
+}
+
+// Android uses the stable JS tabs navigator. The native tabs implementation is
+// still used on iOS, but this avoids known Fabric/native-tabs crash paths on
+// Android release builds while keeping the same routes and visual language.
+export default function AndroidTabsLayout() {
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.softMuted,
+        tabBarStyle: {
+          height: 78,
+          paddingTop: 10,
+          paddingBottom: 12,
+          backgroundColor: COLORS.surface,
+          borderTopWidth: 1,
+          borderTopColor: COLORS.line,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '800' },
+        tabBarItemStyle: { gap: 2 },
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Today',
+          tabBarIcon: ({ color }) => <TabIcon name="today" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="plan"
+        options={{
+          title: 'Plan',
+          tabBarIcon: ({ color }) => <TabIcon name="calendar" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="projects"
+        options={{
+          title: 'Projects',
+          tabBarIcon: ({ color }) => <TabIcon name="projects" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="you"
+        options={{
+          title: 'You',
+          tabBarIcon: ({ color }) => <TabIcon name="user" color={color} />,
+        }}
+      />
+    </Tabs>
+  );
+}
