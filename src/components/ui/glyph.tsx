@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, type ViewStyle } from 'react-native';
+import { Text, View, type ColorValue, type ViewStyle } from 'react-native';
 
 import { COLORS } from '@/constants/theme';
 
@@ -18,15 +18,15 @@ export type GlyphName =
   | 'trend'
   | 'target';
 
-function Line({ color, width = 2, height = 2, style }: { color: string; width?: number; height?: number; style?: ViewStyle }) {
+function Line({ color, width = 2, height = 2, style }: { color: ColorValue; width?: number; height?: number; style?: ViewStyle }) {
   return <View style={[{ width, height, borderRadius: 2, backgroundColor: color }, style]} />;
 }
 
-function Circle({ color, size, fill = 'transparent', borderWidth = 2, style }: { color: string; size: number; fill?: string; borderWidth?: number; style?: ViewStyle }) {
+function Circle({ color, size, fill = 'transparent', borderWidth = 2, style }: { color: ColorValue; size: number; fill?: ColorValue; borderWidth?: number; style?: ViewStyle }) {
   return <View style={[{ width: size, height: size, borderRadius: size / 2, borderWidth, borderColor: color, backgroundColor: fill }, style]} />;
 }
 
-function IconShape({ name, size, color }: { name: GlyphName; size: number; color: string }) {
+function IconShape({ name, size, color }: { name: GlyphName; size: number; color: ColorValue }) {
   const stroke = Math.max(1.7, size / 9);
   const iconSize = size;
 
@@ -75,7 +75,7 @@ export function Glyph({
 }: {
   name: GlyphName;
   size?: number;
-  color?: string;
+  color?: ColorValue;
   style?: ViewStyle;
 }) {
   return (

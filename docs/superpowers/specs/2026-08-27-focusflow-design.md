@@ -24,7 +24,7 @@ The first release is local and self-contained so it can run in Expo Go without a
 
 ## Technical shape
 
-- Expo SDK 55 + Expo Router + TypeScript.
+- Expo SDK 57 + Expo Router + TypeScript.
 - Routes live under `src/app`, with a root stack and a tab group for Today, Projects, and Insights.
 - Shared UI components live under `src/components`; tokens and mock data live under `src/constants`.
 - State is local React state in the tab layout, passed through a small context so tasks persist while navigating tabs during a session.

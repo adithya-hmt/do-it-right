@@ -1,6 +1,6 @@
 # FocusFlow
 
-FocusFlow is a calm, MUI-inspired productivity dashboard built with Expo SDK 55, Expo Router, and React Native. It helps you choose the next meaningful thing, keep active projects visible, and notice your weekly working rhythm.
+FocusFlow is a calm, MUI-inspired productivity dashboard built with Expo SDK 57, Expo Router, and React Native. It helps you choose the next meaningful thing, keep active projects visible, and notice your weekly working rhythm.
 
 ## Run in Expo Go
 

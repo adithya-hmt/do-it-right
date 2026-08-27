@@ -1,10 +1,11 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import type { ColorValue } from 'react-native';
 
 import { Glyph, type GlyphName } from '@/components/ui/glyph';
 import { COLORS } from '@/constants/theme';
 
-function TabIcon({ name, color }: { name: GlyphName; color: string }) {
+function TabIcon({ name, color }: { name: GlyphName; color: ColorValue }) {
   return <Glyph name={name} color={color} size={19} />;
 }
 
