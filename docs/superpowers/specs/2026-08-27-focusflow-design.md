@@ -1,23 +1,23 @@
-# FocusFlow design
+# Do It Right design
 
 ## Product
 
-FocusFlow is a portfolio-ready mobile productivity dashboard for people who want a calmer, more intentional day. It turns a short list of meaningful work into a daily brief, shows the shape of active projects, and gives the user one place to capture the next thought.
+Do It Right is a portfolio-ready mobile productivity dashboard for people who want a calmer, more intentional day. It turns a short list of meaningful work into a daily brief, shows the shape of active projects, and gives the user one place to capture the next thought.
 
-The first release is local and self-contained so it can run in Expo Go without accounts, network permissions, or a backend. The UI is inspired by Material UI's restrained use of surfaces, strong primary actions, clear hierarchy, and reusable component tokens, translated into native React Native primitives.
+The first release is local-first so it can run in Expo Go even when accounts or network access are unavailable. Supabase is an optional private sync layer. The UI is inspired by Material UI's restrained use of surfaces, strong primary actions, clear hierarchy, and reusable component tokens, translated into native React Native primitives.
 
 ## User flow
 
-1. The user opens Today and immediately sees their focus score, the current date, and the next three meaningful tasks.
-2. They tap a task checkbox to mark it complete; the score and progress update in place.
-3. They switch between All, Work, and Personal filters to reduce visual noise.
-4. They tap the floating “Add task” action, enter a title, choose a project, and save it.
-5. They browse Projects for a higher-level view and Insights for a small weekly reflection.
+1. The user completes a three-step onboarding flow and names the kind of attention they want to protect.
+2. Today shows a brief, a Daily Three, optional read-only calendar context, and the rest of the day’s tasks.
+3. Plan turns an open task list into one intention and up to three clear starts; routines are checked without streak pressure.
+4. The user can capture a task into Inbox or an active project, then begin a lightweight focus session.
+5. Projects show progress derived from actual tasks. You holds private signals, life areas, a weekly review, settings, export, and account linking.
 
 ## Visual direction
 
 - Warm canvas: `#F6F7F9` with deep ink text and quiet dividers.
-- Material-inspired primary blue: `#1976D2`, used for selected states and the main action.
+- Violet primary: `#6D4AFF`, used for selected states and the main action.
 - Coral accent: `#F06A5F` for energy and attention without making the app feel aggressive.
 - Rounded, continuous surfaces with subtle shadows and compact spacing.
 - Typography uses the platform system font; display text is large and editorial, body text is compact and readable.
@@ -25,14 +25,15 @@ The first release is local and self-contained so it can run in Expo Go without a
 ## Technical shape
 
 - Expo SDK 57 + Expo Router + TypeScript.
-- Routes live under `src/app`, with a root stack and a tab group for Today, Projects, and Insights.
-- Shared UI components live under `src/components`; tokens and mock data live under `src/constants`.
-- State is local React state in the tab layout, passed through a small context so tasks persist while navigating tabs during a session.
+- Routes live under `src/app`, with a root stack and a four-tab group for Today, Plan, Projects, and You.
+- Shared UI components live under `src/components`; domain types and rules live under `src/domain`.
+- Workspace state is persisted locally through the Expo SQLite-backed localStorage adapter and synchronized through a queued Supabase task API when configured.
+- Supabase tables use per-user ownership and Row Level Security. Calendar and reminders are isolated behind platform adapters with web fallbacks.
 - All controls use React Native primitives, `ScrollView` for responsive content, `Pressable` for tactile states, and Reanimated entry animations already supported by the Expo template.
 
 ## Out of scope
 
-Authentication, cloud sync, push notifications, drag-and-drop scheduling, and analytics backend are intentionally deferred. The goal is a polished, believable first slice that is easy to extend.
+Drag-and-drop scheduling, collaborative workspaces, social profiles, and analytics dashboards remain intentionally out of scope. The goal is a useful private tool with a small surface area and a clear path for community contributions.
 
 ## Verification
 

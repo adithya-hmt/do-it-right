@@ -35,6 +35,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="plan"
+        options={{
+          title: 'Plan',
+          tabBarIcon: ({ color }) => <TabIcon name="calendar" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="projects"
         options={{
           title: 'Projects',
@@ -42,10 +49,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="insights"
+        name="you"
         options={{
-          title: 'Insights',
-          tabBarIcon: ({ color }) => <TabIcon name="insights" color={color} />,
+          title: 'You',
+          tabBarIcon: ({ color }) => <TabIcon name="user" color={color} />,
         }}
       />
     </Tabs>

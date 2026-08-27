@@ -1,0 +1,35 @@
+import type { WorkspaceSnapshot } from '@/domain/types';
+
+const STORAGE_KEY = 'do-it-right.workspace.v1';
+const listeners = new Set<() => void>();
+
+function getStorage(): Storage | null {
+  return typeof globalThis.localStorage === 'undefined' ? null : globalThis.localStorage;
+}
+
+export async function loadWorkspace(): Promise<WorkspaceSnapshot | null> {
+  const raw = getStorage()?.getItem(STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as WorkspaceSnapshot;
+  } catch {
+    getStorage()?.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
+
+export async function saveWorkspace(workspace: WorkspaceSnapshot) {
+  getStorage()?.setItem(STORAGE_KEY, JSON.stringify(workspace));
+  listeners.forEach((listener) => listener());
+}
+
+export function subscribeWorkspace(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export async function clearWorkspace() {
+  getStorage()?.removeItem(STORAGE_KEY);
+  listeners.forEach((listener) => listener());
+}

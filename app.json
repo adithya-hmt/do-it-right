@@ -1,18 +1,19 @@
 {
   "expo": {
-    "name": "FocusFlow",
-    "slug": "focusflow",
+    "name": "Do It Right",
+    "slug": "do-it-right",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "focusflow",
+    "scheme": "doitright",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+      "ios": {
+        "icon": "./assets/expo.icon"
+      },
+      "android": {
+        "package": "com.adithyahmt.doitright",
+        "adaptiveIcon": {
+          "backgroundColor": "#EEE9FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,7 +29,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#6D4AFF",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76
@@ -38,7 +39,10 @@
       "expo-font",
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

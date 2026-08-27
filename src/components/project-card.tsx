@@ -6,10 +6,12 @@ import { ProgressBar } from '@/components/ui/progress-bar';
 import { COLORS, RADIUS, SHADOW } from '@/constants/theme';
 import type { Project } from '@/context/task-context';
 
-export function ProjectCard({ project, compact = false }: { project: Project; compact?: boolean }) {
+export function ProjectCard({ project, compact = false, onPress }: { project: Project; compact?: boolean; onPress?: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`Open ${project.name} project`}
+      onPress={onPress}
       style={({ pressed }) => [
         {
           backgroundColor: COLORS.surface,
@@ -21,7 +23,7 @@ export function ProjectCard({ project, compact = false }: { project: Project; co
         pressed && { opacity: 0.82, transform: [{ scale: 0.99 }] },
       ]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: project.softColor }}>
+        <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: `${project.color}24` }}>
           <Text style={{ color: project.color, fontSize: 17, fontWeight: '900' }}>{project.name.slice(0, 1)}</Text>
         </View>
         <Glyph name="dots" size={13} color={COLORS.softMuted} />

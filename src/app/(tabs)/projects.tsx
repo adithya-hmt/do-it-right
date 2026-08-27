@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -8,7 +9,10 @@ import { COLORS, GUTTER, RADIUS } from '@/constants/theme';
 import { useTasks } from '@/context/task-context';
 
 export default function ProjectsScreen() {
-  const { projects } = useTasks();
+  const { projects, tasks } = useTasks();
+  const activeProjects = projects.filter((project) => project.status === 'active');
+  const dueThisWeek = tasks.filter((task) => task.plannedDate && !task.completed).length;
+  const onTrack = activeProjects.length ? Math.round(activeProjects.reduce((sum, project) => sum + project.progress, 0) / activeProjects.length * 100) : 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.canvas }}>
@@ -24,19 +28,19 @@ export default function ProjectsScreen() {
 
         <Animated.View entering={FadeInUp.delay(80).duration(480)} style={{ flexDirection: 'row', gap: 10 }}>
           {[
-            { value: '04', label: 'active' },
-            { value: '12', label: 'due this week' },
-            { value: '78%', label: 'on track' },
+            { value: String(activeProjects.length).padStart(2, '0'), label: 'active' },
+            { value: String(dueThisWeek), label: 'open tasks' },
+            { value: `${onTrack}%`, label: 'moving' },
           ].map((stat, index) => (
-            <View key={stat.label} style={{ flex: 1, backgroundColor: index === 2 ? COLORS.ink : COLORS.surface, borderRadius: RADIUS.medium, padding: 14, gap: 6 }}>
+            <View key={stat.label} style={{ flex: 1, backgroundColor: index === 2 ? COLORS.contrast : COLORS.surface, borderRadius: RADIUS.medium, padding: 14, gap: 6 }}>
               <Text selectable style={{ color: index === 2 ? COLORS.amber : COLORS.ink, fontSize: 21, fontWeight: '900', fontVariant: ['tabular-nums'] }}>{stat.value}</Text>
-              <Text style={{ color: index === 2 ? '#B4C0C6' : COLORS.muted, fontSize: 11, lineHeight: 14, fontWeight: '700' }}>{stat.label}</Text>
+              <Text style={{ color: index === 2 ? COLORS.contrastMuted : COLORS.muted, fontSize: 11, lineHeight: 14, fontWeight: '700' }}>{stat.label}</Text>
             </View>
           ))}
         </Animated.View>
 
         <View style={{ gap: 13 }}>
-          {projects.map((project, index) => <Animated.View key={project.id} entering={FadeInUp.delay(120 + index * 55).duration(420)}><ProjectCard project={project} /></Animated.View>)}
+          {activeProjects.map((project, index) => <Animated.View key={project.id} entering={FadeInUp.delay(120 + index * 55).duration(420)}><ProjectCard project={project} onPress={() => router.push({ pathname: '/project/[id]', params: { id: project.id } })} /></Animated.View>)}
         </View>
       </ScrollView>
     </View>
