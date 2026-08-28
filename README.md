@@ -1,6 +1,6 @@
-# Do It Right
+# Focusflow
 
-Do It Right is a private personal operating system for choosing what matters, making a humane plan, and closing the day with less mental noise. It is built with Expo SDK 57, Expo Router, React Native, and Supabase.
+Focusflow is a private mobile productivity workspace for choosing what matters, shaping the day, and finishing with less mental noise. It is built with Expo SDK 57, Expo Router, React Native, and Supabase.
 
 ## Run in Expo Go
 
@@ -27,11 +27,11 @@ npx expo start --tunnel
 ## The workflow
 
 - Onboarding: choose your name, focus intent, and morning anchor.
-- Today: a calm brief, Daily Three, read-only calendar context, progress, and quick capture.
-- Plan: set an intention, choose up to three tasks, complete routines, and keep the rest in view.
-- Projects: see real progress derived from tasks and open a project detail page.
-- Focus: start a lightweight timer against a task or project; sessions stay in your private workspace.
-- You: review signals, life areas, weekly reflection, settings, account linking, export, calendar, and reminders.
+- Today: a focused brief, Daily Three, read-only calendar context, progress, task filters, search, and quick capture.
+- Plan: set an intention, choose up to three tasks, timebox work, complete routines, and keep the rest in view.
+- Projects: create projects, see real progress derived from tasks, and open a project workspace.
+- Focus: start a lightweight timer against a task or project; sessions stay in your private workspace and appear in Focus history.
+- You: review signals, focus history, life areas, weekly reflection, settings, account linking, export, calendar, and reminders.
 
 The workspace is local-first so it remains usable offline and immediately demoable in Expo Go. When Supabase is configured, tasks sync to a per-user cloud workspace through Row Level Security.
 
@@ -62,7 +62,7 @@ The optional Supabase agent skills are installed under `.agents/skills` for futu
 
 ## Open source
 
-Do It Right is MIT-licensed. See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SECURITY.md`](SECURITY.md).
+Focusflow is MIT-licensed. See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SECURITY.md`](SECURITY.md).
 
 ## Verification
 
