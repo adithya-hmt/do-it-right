@@ -3,173 +3,67 @@ import React from 'react';
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
+import { AppHeader } from '@/components/app-header';
 import { ProjectCard } from '@/components/project-card';
+import { SectionHeading } from '@/components/section-heading';
+import { SurfaceCard } from '@/components/ui/surface-card';
 import { TaskRow } from '@/components/task-row';
 import { Glyph } from '@/components/ui/glyph';
 import { COLORS, DEEP_SHADOW, GUTTER, RADIUS } from '@/constants/theme';
-import { useTasks, type TaskCategory } from '@/context/task-context';
+import { useTasks } from '@/context/task-context';
 import { useCalendarCommitments } from '@/hooks/use-calendar-commitments';
+import { getDayKey } from '@/domain/workspace';
 
-const FILTERS: ('All' | TaskCategory)[] = ['All', 'Work', 'Personal'];
+const FILTERS = ['All', 'Next', 'Inbox', 'Done'] as const;
 
 export default function TodayScreen() {
   const { width } = useWindowDimensions();
-  const { tasks, projects, profile, todayPlan, toggleTask, syncStatus, syncMessage } = useTasks();
+  const today = getDayKey(new Date());
+  const { tasks, projects, profile, todayPlan, toggleTask, syncStatus } = useTasks();
   const [filter, setFilter] = React.useState<(typeof FILTERS)[number]>('All');
-  const completed = tasks.filter((task) => task.completed).length;
-  const visibleTasks = tasks.filter((task) => filter === 'All' || task.category === filter);
-  const completionPercent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
-  const dailyThree = todayPlan.dailyThree.map((id) => tasks.find((task) => task.id === id)).filter((task) => task && !task.completed);
   const { commitments, loading: calendarLoading } = useCalendarCommitments();
-  const projectWidth = Math.min(Math.max(width - 76, 260), 338);
-  const syncLabel = {
-    loading: 'syncing',
-    synced: 'cloud synced',
-    demo: 'local demo',
-    setup: 'setup needed',
-    error: 'local backup',
-  }[syncStatus];
-  const syncDotColor = syncStatus === 'synced' ? COLORS.mintInk : syncStatus === 'loading' ? COLORS.amber : COLORS.coral;
 
   if (!profile.onboardingComplete) return <Redirect href="/onboarding" />;
 
+  const openTasks = tasks.filter((task) => !task.completed);
+  const completed = tasks.filter((task) => task.completed).length;
+  const plannedToday = tasks.filter((task) => !task.completed && task.plannedDate === today);
+  const dailyThree = todayPlan.dailyThree.map((id) => tasks.find((task) => task.id === id)).filter((task) => task && !task.completed);
+  const visibleTasks = tasks.filter((task) => {
+    if (filter === 'Next') return !task.completed && task.plannedDate === today;
+    if (filter === 'Inbox') return !task.completed && task.status === 'inbox';
+    if (filter === 'Done') return task.completed;
+    return task.plannedDate === today || task.status === 'inbox' || task.completed;
+  });
+  const completionPercent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+  const projectWidth = Math.min(Math.max(width - 72, 250), 310);
+  const syncLabel = syncStatus === 'synced' ? 'synced' : syncStatus === 'loading' ? 'syncing' : 'local only';
+
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.canvas }}>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 21, paddingBottom: 124, gap: 25 }}>
-        <Animated.View entering={FadeInDown.duration(450)} style={{ gap: 22 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-              <View style={{ width: 27, height: 27, borderRadius: 9, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' }}>
-                <Glyph name="spark" size={15} color={COLORS.white} />
-              </View>
-              <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900', letterSpacing: 1.35 }}>DO IT RIGHT</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: syncDotColor }} />
-              <Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '700' }}>{syncLabel}</Text>
-              <View style={{ width: 34, height: 34, borderRadius: RADIUS.pill, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: COLORS.contrastText, fontSize: 12, fontWeight: '900' }}>AM</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={{ gap: 7 }}>
-            <Text selectable style={{ color: COLORS.ink, fontSize: 34, lineHeight: 39, fontWeight: '900', letterSpacing: -1 }}>
-              Good morning, {profile.displayName}.{ '\n' }Make room for what matters.
-            </Text>
-            <Text style={{ color: COLORS.muted, fontSize: 14, fontWeight: '600' }}>
-              {todayPlan.intention || 'A lighter way to work'}
-            </Text>
-          </View>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 20, paddingBottom: 158, gap: 25 }}>
+        <Animated.View entering={FadeInDown.duration(420)}>
+          <AppHeader eyebrow={`${new Date().toLocaleDateString([], { weekday: 'long' })} · ${syncLabel}`} title={`Good morning, ${profile.displayName}.`} subtitle={todayPlan.intention || 'Pick one clear thing and let the rest wait.'} profileInitial={profile.displayName.slice(0, 1).toUpperCase()} actionIcon="search" onAction={() => router.push('../search')} />
         </Animated.View>
 
-        <Animated.View
-          entering={FadeInUp.delay(90).duration(500)}
-          style={{ minHeight: 188, borderRadius: RADIUS.large, backgroundColor: COLORS.contrast, padding: 22, justifyContent: 'space-between', boxShadow: DEEP_SHADOW }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Glyph name="spark" size={14} color={COLORS.amber} />
-              <Text style={{ color: COLORS.amber, fontSize: 11, fontWeight: '900', letterSpacing: 1.4 }}>MORNING BRIEF</Text>
-            </View>
-            <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.pill, backgroundColor: COLORS.contrastSurface }}>
-              <Text style={{ color: COLORS.contrastMuted, fontSize: 11, fontWeight: '800' }}>2h 40m focus window</Text>
-            </View>
-          </View>
-          <View style={{ gap: 8 }}>
-            <Text style={{ color: COLORS.contrastText, fontSize: 23, lineHeight: 28, fontWeight: '800', letterSpacing: -0.4 }}>
-              {profile.focusIntent}.{ '\n' }One meaningful thing before the noise begins.
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ width: 76, height: 5, backgroundColor: COLORS.contrastLine, borderRadius: 5, overflow: 'hidden' }}>
-                <View style={{ width: `${completionPercent}%`, height: 5, backgroundColor: COLORS.amber, borderRadius: 5 }} />
-              </View>
-              <Text selectable style={{ color: COLORS.contrastMuted, fontSize: 12, fontWeight: '700' }}>{completed} of {tasks.length} complete</Text>
-            </View>
-          </View>
+        <Animated.View entering={FadeInUp.delay(60).duration(450)} style={{ backgroundColor: COLORS.contrast, borderRadius: RADIUS.large, padding: 20, gap: 18, boxShadow: DEEP_SHADOW }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.primary }} /><Text style={{ color: COLORS.contrastText, fontSize: 11, fontWeight: '900', letterSpacing: 1.15 }}>TODAY IN MOTION</Text></View><Text style={{ color: COLORS.contrastMuted, fontSize: 11, fontWeight: '800' }}>{completed}/{tasks.length} done</Text></View>
+          <View style={{ gap: 7 }}><Text selectable style={{ color: COLORS.contrastText, fontSize: 23, lineHeight: 27, fontWeight: '900', letterSpacing: -0.5 }}>{plannedToday.length ? `${plannedToday.length} open things on your plan.` : 'Your plan has room to breathe.'}</Text><Text style={{ color: COLORS.contrastMuted, fontSize: 13, lineHeight: 19, fontWeight: '600' }}>{profile.focusIntent}. Keep the next move visible.</Text></View>
+          <View style={{ gap: 8 }}><View style={{ height: 6, backgroundColor: COLORS.contrastSurface, borderRadius: 3, overflow: 'hidden' }}><View style={{ width: `${Math.max(4, completionPercent)}%`, height: 6, borderRadius: 3, backgroundColor: COLORS.primary }} /></View><Text style={{ color: COLORS.contrastMuted, fontSize: 11, fontWeight: '700' }}>{completionPercent}% of the workspace wrapped</Text></View>
+          <View style={{ flexDirection: 'row', gap: 9 }}><Pressable onPress={() => router.push('/focus')} style={({ pressed }) => [{ flex: 1, minHeight: 44, borderRadius: 14, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 }, pressed && { opacity: 0.75 }]}><Glyph name="play" size={11} color={COLORS.ink} /><Text style={{ color: COLORS.ink, fontSize: 12, fontWeight: '900' }}>Start focus</Text></Pressable><Pressable onPress={() => router.push('/plan')} style={({ pressed }) => [{ width: 104, minHeight: 44, borderRadius: 14, backgroundColor: COLORS.contrastSurface, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.75 }]}><Text style={{ color: COLORS.contrastText, fontSize: 12, fontWeight: '900' }}>Open plan</Text></Pressable></View>
         </Animated.View>
 
-        {(syncStatus === 'setup' || syncStatus === 'error' || syncStatus === 'demo') && (
-          <View style={{ borderRadius: RADIUS.medium, backgroundColor: COLORS.primarySoft, padding: 16, gap: 7 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Glyph name="spark" size={13} color={COLORS.primary} />
-              <Text style={{ color: COLORS.primary, fontSize: 11, fontWeight: '900', letterSpacing: 1.3 }}>LOCAL BACKUP</Text>
-            </View>
-            <Text style={{ color: COLORS.ink, fontSize: 13, lineHeight: 19, fontWeight: '600' }}>
-              {syncMessage ?? 'Cloud sync is not configured yet. Your tasks are safe on this device.'}
-            </Text>
-          </View>
-        )}
+        <View style={{ flexDirection: 'row', gap: 9 }}>{[{ value: String(openTasks.length), label: 'open', icon: 'inbox' as const }, { value: `${plannedToday.reduce((sum, task) => sum + task.estimateMinutes, 0)}m`, label: 'planned', icon: 'clock' as const }, { value: String(completed), label: 'finished', icon: 'check' as const }].map((stat) => <SurfaceCard key={stat.label} style={{ flex: 1, padding: 14, gap: 11 }}><Glyph name={stat.icon} size={15} color={COLORS.ink} /><Text selectable style={{ color: COLORS.ink, fontSize: 22, fontWeight: '900', fontVariant: ['tabular-nums'] }}>{stat.value}</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '800' }}>{stat.label}</Text></SurfaceCard>)}</View>
 
-        <View style={{ gap: 13 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ color: COLORS.ink, fontSize: 20, fontWeight: '900', letterSpacing: -0.3 }}>Daily Three</Text>
-              <Text style={{ color: COLORS.muted, fontSize: 13, fontWeight: '600' }}>{dailyThree.length} clear starts for today</Text>
-            </View>
-            <Pressable onPress={() => router.push('/plan')} hitSlop={8}><Text style={{ color: COLORS.primary, fontSize: 13, fontWeight: '900' }}>Shape it  →</Text></Pressable>
-          </View>
-          <View style={{ backgroundColor: COLORS.surface, borderRadius: RADIUS.medium, paddingHorizontal: 16, boxShadow: '0 2px 10px rgba(24, 36, 43, 0.04)' }}>
-            {dailyThree.length ? dailyThree.map((task) => task ? <Pressable key={task.id} onPress={() => router.push({ pathname: '/focus', params: { taskId: task.id } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: COLORS.line }}><View style={{ width: 25, height: 25, borderRadius: 13, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Glyph name="play" size={11} color={COLORS.primary} /></View><View style={{ flex: 1, gap: 3 }}><Text selectable style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>{task.title}</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>{task.project} · {task.estimateMinutes} min</Text></View><Text style={{ color: COLORS.primary, fontSize: 11, fontWeight: '900' }}>START</Text></Pressable> : null) : <Pressable onPress={() => router.push('/plan')} style={{ padding: 18, alignItems: 'center', gap: 6 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Choose the shape of today</Text><Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>Pick up to three clear starts in Plan.</Text></Pressable>}
-          </View>
-        </View>
+        <View style={{ gap: 12 }}><SectionHeading title="Next up" subtitle={dailyThree.length ? `${dailyThree.length} priorities chosen for today` : 'Choose a few things worth your attention'} action="Shape plan" onAction={() => router.push('/plan')} /><SurfaceCard style={{ paddingHorizontal: 16 }}>{dailyThree.length ? dailyThree.map((task) => task ? <Pressable key={task.id} onPress={() => router.push({ pathname: '/focus', params: { taskId: task.id } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: COLORS.line }}><View style={{ width: 29, height: 29, borderRadius: 10, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Glyph name="play" size={10} color={COLORS.ink} /></View><View style={{ flex: 1, gap: 3 }}><Text selectable style={{ color: COLORS.ink, fontSize: 14, fontWeight: '900' }}>{task.title}</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '700' }}>{task.project} · {task.estimateMinutes} min</Text></View><Glyph name="chevron" size={14} color={COLORS.softMuted} /></Pressable> : null) : <Pressable onPress={() => router.push('/plan')} style={{ alignItems: 'center', padding: 21, gap: 6 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '900' }}>Give the day a shape</Text><Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>Choose up to three starts in Plan.</Text></Pressable>}</SurfaceCard></View>
 
-        <View style={{ gap: 13 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Glyph name="calendar" size={17} color={COLORS.lavenderInk} /><Text style={{ color: COLORS.ink, fontSize: 18, fontWeight: '900' }}>Today around you</Text></View>
-            <Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '800' }}>READ ONLY</Text>
-          </View>
-          <View style={{ backgroundColor: COLORS.lavender, borderRadius: RADIUS.medium, padding: 16, gap: 10 }}>
-            {calendarLoading ? <Text style={{ color: COLORS.lavenderInk, fontSize: 13, fontWeight: '700' }}>Checking your calendar…</Text> : commitments.length ? commitments.slice(0, 4).map((commitment) => <View key={commitment.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: commitment.calendarColor ?? COLORS.lavenderInk }} /><Text style={{ flex: 1, color: COLORS.ink, fontSize: 13, fontWeight: '800' }}>{commitment.title}</Text><Text style={{ color: COLORS.lavenderInk, fontSize: 11, fontWeight: '800' }}>{new Date(commitment.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text></View>) : <View style={{ gap: 5 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>No calendar commitments imported.</Text><Text style={{ color: COLORS.lavenderInk, fontSize: 12, lineHeight: 18, fontWeight: '600' }}>Your plan stays uncluttered. Connect a read-only calendar from You → Settings when you want context.</Text></View>}
-          </View>
-        </View>
+        <View style={{ gap: 12 }}><SectionHeading title="Around you" subtitle="A little context from your calendar" action="Settings" onAction={() => router.push('/settings')} /><SurfaceCard style={{ backgroundColor: COLORS.lavender, padding: 16, gap: 11 }}>{calendarLoading ? <Text style={{ color: COLORS.lavenderInk, fontSize: 13, fontWeight: '700' }}>Checking your calendar…</Text> : commitments.length ? commitments.slice(0, 3).map((commitment) => <View key={commitment.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: commitment.calendarColor ?? COLORS.lavenderInk }} /><Text style={{ flex: 1, color: COLORS.ink, fontSize: 13, fontWeight: '800' }}>{commitment.title}</Text><Text style={{ color: COLORS.lavenderInk, fontSize: 11, fontWeight: '900' }}>{new Date(commitment.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text></View>) : <View style={{ gap: 5 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '900' }}>No commitments imported.</Text><Text style={{ color: COLORS.lavenderInk, fontSize: 12, lineHeight: 18, fontWeight: '600' }}>Connect a read-only calendar when you want your plan to see the shape of the day.</Text></View>}</SurfaceCard></View>
 
-        <View style={{ gap: 14 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ color: COLORS.ink, fontSize: 20, fontWeight: '900', letterSpacing: -0.3 }}>Everything for today</Text>
-              <Text style={{ color: COLORS.muted, fontSize: 13, fontWeight: '600' }}>{completed} of {tasks.length} wrapped today</Text>
-            </View>
-            <Pressable onPress={() => router.push('/plan')} hitSlop={8} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
-              <Text style={{ color: COLORS.primary, fontSize: 13, fontWeight: '900' }}>Open plan  →</Text>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {FILTERS.map((item) => {
-              const active = filter === item;
-              return (
-                  <Pressable key={item} onPress={() => setFilter(item)} style={({ pressed }) => [{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: RADIUS.pill, backgroundColor: active ? COLORS.contrast : COLORS.surface, borderWidth: active ? 0 : 1, borderColor: COLORS.line, opacity: pressed ? 0.72 : 1 }]}>
-                  <Text style={{ color: active ? COLORS.contrastText : COLORS.muted, fontSize: 12, fontWeight: '800' }}>{item}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <View style={{ backgroundColor: COLORS.surface, borderRadius: RADIUS.medium, paddingHorizontal: 16, boxShadow: '0 2px 10px rgba(24, 36, 43, 0.04)' }}>
-            {visibleTasks.map((task) => <TaskRow key={task.id} task={task} onToggle={() => toggleTask(task.id)} />)}
-          </View>
-        </View>
+        <View style={{ gap: 12 }}><SectionHeading title="Your list" subtitle={`${visibleTasks.length} tasks in this view`} action="Capture" onAction={() => router.push('/add-task')} /><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7 }}>{FILTERS.map((item) => { const active = filter === item; return <Pressable key={item} onPress={() => setFilter(item)} style={({ pressed }) => [{ paddingVertical: 9, paddingHorizontal: 13, borderRadius: 12, backgroundColor: active ? COLORS.ink : COLORS.surface, borderWidth: active ? 0 : 1, borderColor: COLORS.line }, pressed && { opacity: 0.7 }]}><Text style={{ color: active ? COLORS.contrastText : COLORS.muted, fontSize: 11, fontWeight: '900' }}>{item}</Text></Pressable>; })}</ScrollView><SurfaceCard style={{ paddingHorizontal: 16 }}>{visibleTasks.length ? visibleTasks.map((task) => <TaskRow key={task.id} task={task} onToggle={() => toggleTask(task.id)} onStart={() => router.push({ pathname: '/focus', params: { taskId: task.id } })} />) : <View style={{ alignItems: 'center', padding: 26, gap: 7 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '900' }}>Nothing here yet.</Text><Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>Capture a task and make the next move visible.</Text></View>}</SurfaceCard></View>
 
-        <View style={{ gap: 14 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ color: COLORS.ink, fontSize: 20, fontWeight: '900', letterSpacing: -0.3 }}>Active projects</Text>
-              <Text style={{ color: COLORS.muted, fontSize: 13, fontWeight: '600' }}>Keep the bigger picture close.</Text>
-            </View>
-            <Glyph name="arrow" size={20} color={COLORS.primary} />
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 13, paddingVertical: 2 }}>
-            {projects.slice(0, 3).map((project) => <View key={project.id} style={{ width: projectWidth }}><ProjectCard project={project} compact onPress={() => router.push({ pathname: '/project/[id]', params: { id: project.id } })} /></View>)}
-          </ScrollView>
-        </View>
+        <View style={{ gap: 12 }}><SectionHeading title="Projects" subtitle="The bigger picture, kept close" action="See all" onAction={() => router.push('/(tabs)/projects')} /><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>{projects.filter((project) => project.status === 'active').slice(0, 3).map((project) => <View key={project.id} style={{ width: projectWidth }}><ProjectCard project={project} compact onPress={() => router.push({ pathname: '/project/[id]', params: { id: project.id } })} /></View>)}</ScrollView></View>
 
-        <Pressable onPress={() => router.push('/add-task')} style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 54, borderRadius: RADIUS.medium, backgroundColor: COLORS.primary, boxShadow: DEEP_SHADOW, opacity: pressed ? 0.82 : 1 }]}>
-          <View style={{ width: 23, height: 23, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.16)' }}>
-            <Glyph name="plus" size={18} color={COLORS.white} />
-          </View>
-          <Text style={{ color: COLORS.white, fontSize: 14, fontWeight: '900' }}>Capture a new task</Text>
-        </Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/add-task')} style={({ pressed }) => [{ minHeight: 58, borderRadius: 17, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 9, boxShadow: DEEP_SHADOW }, pressed && { opacity: 0.8, transform: [{ scale: 0.99 }] }]}><View style={{ width: 24, height: 24, borderRadius: 8, backgroundColor: 'rgba(21,24,20,0.12)', alignItems: 'center', justifyContent: 'center' }}><Glyph name="plus" size={17} color={COLORS.ink} /></View><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '900' }}>Capture a task</Text></Pressable>
       </ScrollView>
     </View>
   );

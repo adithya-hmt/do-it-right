@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Do It Right",
-    "slug": "do-it-right",
+    "name": "Focusflow",
+    "slug": "focusflow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "doitright",
+    "scheme": "focusflow",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -13,7 +13,7 @@
     "android": {
       "package": "com.adithyahmt.doitright",
       "adaptiveIcon": {
-        "backgroundColor": "#EEE9FF",
+          "backgroundColor": "#E8F8BE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -29,7 +29,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#6D4AFF",
+          "backgroundColor": "#171B16",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

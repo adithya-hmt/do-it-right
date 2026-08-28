@@ -12,7 +12,7 @@ const PRIORITY_COLORS = {
   low: COLORS.softMuted,
 };
 
-export function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
+export function TaskRow({ task, onToggle, onStart }: { task: Task; onToggle: () => void; onStart?: () => void }) {
   return (
     <Animated.View entering={FadeIn.duration(260)} exiting={FadeOut.duration(160)}>
       <Pressable
@@ -61,7 +61,7 @@ export function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }
             <Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>{task.due}</Text>
           </View>
         </View>
-        <View style={{ width: 7, height: 7, borderRadius: RADIUS.pill, backgroundColor: PRIORITY_COLORS[task.priority] }} />
+        {onStart && !task.completed ? <Pressable accessibilityRole="button" accessibilityLabel={`Start focus on ${task.title}`} onPress={onStart} hitSlop={8} style={({ pressed }) => [{ width: 30, height: 30, borderRadius: 10, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.55 }]}><Glyph name="play" size={10} color={COLORS.ink} /></Pressable> : <View style={{ width: 7, height: 7, borderRadius: RADIUS.pill, backgroundColor: PRIORITY_COLORS[task.priority] }} />}
       </Pressable>
     </Animated.View>
   );

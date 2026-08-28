@@ -28,6 +28,30 @@ export default function RootLayout() {
             headerTitleStyle: { fontWeight: '800' },
           }}
         />
+        <Stack.Screen
+          name="new-project"
+          options={{
+            presentation: 'modal',
+            headerShown: true,
+            headerTitle: 'New project',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: COLORS.canvas },
+            headerTintColor: COLORS.ink,
+            headerTitleStyle: { fontWeight: '800' },
+          }}
+        />
+        <Stack.Screen
+          name="search"
+          options={{
+            presentation: 'modal',
+            headerShown: true,
+            headerTitle: 'Search',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: COLORS.canvas },
+            headerTintColor: COLORS.ink,
+            headerTitleStyle: { fontWeight: '800' },
+          }}
+        />
         <Stack.Screen name="focus" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Focus', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="review" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Weekly review', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: 'Settings', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />

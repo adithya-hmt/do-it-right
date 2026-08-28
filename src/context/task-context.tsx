@@ -377,7 +377,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
   const exportData = React.useCallback(() => exportWorkspace(workspaceRef.current), []);
 
   const addProject = React.useCallback((input: { name: string; outcome: string; areaId: string }) => {
-    const project: Project = { id: createId('project'), name: input.name.trim(), eyebrow: 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: input.areaId, status: 'active', targetDate: null, color: '#6D4AFF', softColor: '#EEE9FF', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0 };
+    const project: Project = { id: createId('project'), name: input.name.trim(), eyebrow: 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: input.areaId, status: 'active', targetDate: null, color: '#8DBE2F', softColor: '#E8F8BE', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0 };
     commit((current) => ({ ...current, projects: [...current.projects, project] }));
   }, [commit, workspace.projects.length]);
 

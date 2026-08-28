@@ -41,11 +41,11 @@ export default function OnboardingScreen() {
           <View style={{ gap: 28 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' }}><Glyph name="check" size={20} color={COLORS.white} /></View>
-              <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900', letterSpacing: 1.5 }}>DO IT RIGHT</Text>
+              <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900', letterSpacing: 1.5 }}>FOCUSFLOW</Text>
             </View>
             <View style={{ gap: 12 }}>
               <Text selectable style={{ color: COLORS.ink, fontSize: 38, lineHeight: 42, fontWeight: '900', letterSpacing: -1.5 }}>{step === 0 ? 'A little more room\nfor what matters.' : step === 1 ? 'What do you want\nmore space for?' : 'Give your day\na gentle shape.'}</Text>
-              <Text style={{ color: COLORS.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' }}>{step === 0 ? 'Do It Right is a private place to decide what deserves your attention today.' : step === 1 ? 'This helps the app keep your plan human when the week gets noisy.' : 'Choose a starting point. You can change it anytime.'}</Text>
+              <Text style={{ color: COLORS.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' }}>{step === 0 ? 'Focusflow is a private place to decide what deserves your attention today.' : step === 1 ? 'This helps the app keep your plan human when the week gets noisy.' : 'Choose a starting point. You can change it anytime.'}</Text>
             </View>
 
             {step === 0 ? (

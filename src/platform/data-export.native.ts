@@ -11,6 +11,6 @@ export async function exportWorkspace(workspace: WorkspaceSnapshot) {
   const uri = `${FileSystem.documentDirectory}do-it-right-${new Date().toISOString().slice(0, 10)}.json`;
   await FileSystem.writeAsStringAsync(uri, workspaceToJson(workspace), { encoding: FileSystem.EncodingType.UTF8 });
   if (!(await Sharing.isAvailableAsync())) return false;
-  await Sharing.shareAsync(uri, { mimeType: 'application/json', dialogTitle: 'Export your Do It Right workspace' });
+  await Sharing.shareAsync(uri, { mimeType: 'application/json', dialogTitle: 'Export your Focusflow workspace' });
   return true;
 }

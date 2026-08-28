@@ -10,7 +10,7 @@ export async function exportWorkspace(workspace: WorkspaceSnapshot) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `do-it-right-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.download = `focusflow-${new Date().toISOString().slice(0, 10)}.json`;
   anchor.click();
   URL.revokeObjectURL(url);
   return true;

@@ -9,10 +9,10 @@ const INITIAL_TASKS: Task[] = [
 ];
 
 const INITIAL_PROJECTS: Project[] = [
-  { id: 'northstar', name: 'Northstar', eyebrow: 'WORK / NOW', outcome: 'Make the first mile feel effortless.', summary: 'Make the first mile feel effortless.', areaId: 'work', status: 'active', targetDate: null, color: '#6D4AFF', softColor: '#EEE9FF', position: 0, progress: 0, tasksDone: 0, tasksTotal: 0 },
-  { id: 'launch-kit', name: 'Launch kit', eyebrow: 'WORK / SOON', outcome: 'A sharper story for the next release.', summary: 'A sharper story for the next release.', areaId: 'work', status: 'active', targetDate: null, color: '#F06A5F', softColor: '#FDEAE7', position: 1, progress: 0, tasksDone: 0, tasksTotal: 0 },
-  { id: 'field-notes', name: 'Field notes', eyebrow: 'PERSONAL / ONGOING', outcome: 'Collect the ideas worth carrying forward.', summary: 'Collect the ideas worth carrying forward.', areaId: 'personal', status: 'active', targetDate: null, color: '#554C9E', softColor: '#EAE8FF', position: 2, progress: 0, tasksDone: 0, tasksTotal: 0 },
-  { id: 'rituals', name: 'Rituals', eyebrow: 'HEALTH / DAILY', outcome: 'Small inputs that keep the system human.', summary: 'Small inputs that keep the system human.', areaId: 'health', status: 'active', targetDate: null, color: '#2F8060', softColor: '#DDF4EA', position: 3, progress: 0, tasksDone: 0, tasksTotal: 0 },
+  { id: 'northstar', name: 'Northstar', eyebrow: 'WORK / NOW', outcome: 'Make the first mile feel effortless.', summary: 'Make the first mile feel effortless.', areaId: 'work', status: 'active', targetDate: null, color: '#8DBE2F', softColor: '#E8F8BE', position: 0, progress: 0, tasksDone: 0, tasksTotal: 0 },
+  { id: 'launch-kit', name: 'Launch kit', eyebrow: 'WORK / SOON', outcome: 'A sharper story for the next release.', summary: 'A sharper story for the next release.', areaId: 'work', status: 'active', targetDate: null, color: '#D96D51', softColor: '#F8E4DA', position: 1, progress: 0, tasksDone: 0, tasksTotal: 0 },
+  { id: 'field-notes', name: 'Field notes', eyebrow: 'PERSONAL / ONGOING', outcome: 'Collect the ideas worth carrying forward.', summary: 'Collect the ideas worth carrying forward.', areaId: 'personal', status: 'active', targetDate: null, color: '#56614F', softColor: '#E4E9DE', position: 2, progress: 0, tasksDone: 0, tasksTotal: 0 },
+  { id: 'rituals', name: 'Rituals', eyebrow: 'HEALTH / DAILY', outcome: 'Small inputs that keep the system human.', summary: 'Small inputs that keep the system human.', areaId: 'health', status: 'active', targetDate: null, color: '#4E7A43', softColor: '#DDF0D4', position: 3, progress: 0, tasksDone: 0, tasksTotal: 0 },
 ];
 
 export function getDayKey(date: Date) {
@@ -30,11 +30,11 @@ export function deriveProjectProgress(projectId: string, tasks: Task[]) {
 
 export function buildSeedWorkspace(day = getDayKey(new Date())): WorkspaceSnapshot {
   return {
-    profile: { id: 'local-profile', displayName: 'Alex', email: null, avatarColor: '#6D4AFF', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, weekStartsOn: 1, morningTime: '08:00', eveningTime: '20:30', focusIntent: 'Make space for meaningful work', theme: 'system', reducedMotion: false, onboardingComplete: false },
+    profile: { id: 'local-profile', displayName: 'Alex', email: null, avatarColor: '#B6EE4A', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, weekStartsOn: 1, morningTime: '08:00', eveningTime: '20:30', focusIntent: 'Make space for meaningful work', theme: 'system', reducedMotion: false, onboardingComplete: false },
     areas: [
-      { id: 'work', name: 'Work & study', icon: 'briefcase', color: '#6D4AFF', position: 0, archivedAt: null },
-      { id: 'health', name: 'Health', icon: 'heart', color: '#2F8060', position: 1, archivedAt: null },
-      { id: 'personal', name: 'Personal', icon: 'spark', color: '#F06A5F', position: 2, archivedAt: null },
+      { id: 'work', name: 'Work & study', icon: 'briefcase', color: '#8DBE2F', position: 0, archivedAt: null },
+      { id: 'health', name: 'Health', icon: 'heart', color: '#4E7A43', position: 1, archivedAt: null },
+      { id: 'personal', name: 'Personal', icon: 'spark', color: '#D96D51', position: 2, archivedAt: null },
     ],
     projects: INITIAL_PROJECTS,
     tasks: INITIAL_TASKS.map((task) => ({ ...task, plannedDate: task.plannedDate === '2026-08-27' ? day : task.plannedDate })),

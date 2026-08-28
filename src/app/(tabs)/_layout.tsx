@@ -15,17 +15,23 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.softMuted,
+        tabBarInactiveTintColor: '#AAB4A5',
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 78,
-          paddingTop: 10,
-          paddingBottom: 12,
-          backgroundColor: COLORS.surface,
-          borderTopWidth: 1,
-          borderTopColor: COLORS.line,
+          position: 'absolute',
+          left: 16,
+          right: 16,
+          bottom: 14,
+          height: 70,
+          paddingTop: 8,
+          paddingBottom: 8,
+          backgroundColor: COLORS.contrast,
+          borderTopWidth: 0,
+          borderRadius: 24,
+          boxShadow: '0 12px 28px rgba(17, 22, 15, 0.22)',
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '800' },
-        tabBarItemStyle: { gap: 2 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '900' },
+        tabBarItemStyle: { gap: 3 },
       }}>
       <Tabs.Screen
         name="index"
