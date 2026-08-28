@@ -9,34 +9,54 @@ const COLLECTIONS = ['profile', 'areas', 'projects', 'tasks', 'dayPlans', 'routi
 type CollectionName = (typeof COLLECTIONS)[number];
 
 let databasePromise: ReturnType<typeof SQLite.openDatabaseAsync> | null = null;
+let transactionTail: Promise<void> = Promise.resolve();
+
+async function serializeTransaction<T>(operation: () => Promise<T>): Promise<T> {
+  const previous = transactionTail;
+  let release!: () => void;
+  transactionTail = new Promise<void>((resolve) => { release = resolve; });
+  await previous;
+  try {
+    return await operation();
+  } finally {
+    release();
+  }
+}
 
 async function database() {
   databasePromise ??= SQLite.openDatabaseAsync(DATABASE_NAME).then(async (db) => {
-    await db.withTransactionAsync(async () => {
-      const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-      if ((version?.user_version ?? 0) < 3) {
-        await db.execAsync(`
-          PRAGMA journal_mode = WAL;
-          PRAGMA foreign_keys = ON;
-          CREATE TABLE IF NOT EXISTS workspaces (
-            namespace TEXT PRIMARY KEY NOT NULL,
-            meta TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-          );
-          CREATE TABLE IF NOT EXISTS workspace_entities (
-            namespace TEXT NOT NULL,
-            collection TEXT NOT NULL,
-            entity_id TEXT NOT NULL,
-            payload TEXT NOT NULL,
-            PRIMARY KEY (namespace, collection, entity_id),
-            FOREIGN KEY (namespace) REFERENCES workspaces(namespace) ON DELETE CASCADE
-          );
-          CREATE INDEX IF NOT EXISTS workspace_entities_lookup
-            ON workspace_entities(namespace, collection, entity_id);
-          PRAGMA user_version = 3;
-        `);
-      }
-    });
+    // Journal mode and foreign-key enforcement are connection settings. SQLite
+    // rejects changing them while a transaction is active, so configure the
+    // connection before entering the schema transaction.
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA foreign_keys = ON;
+    `);
+    const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+    if ((version?.user_version ?? 0) < 3) {
+      // This setup is intentionally idempotent and sequential. If the process
+      // stops between statements, the next launch simply retries the remaining
+      // CREATE IF NOT EXISTS statements rather than surfacing a masked rollback
+      // error from SQLite's transaction wrapper.
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS workspaces (
+          namespace TEXT PRIMARY KEY NOT NULL,
+          meta TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS workspace_entities (
+          namespace TEXT NOT NULL,
+          collection TEXT NOT NULL,
+          entity_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          PRIMARY KEY (namespace, collection, entity_id),
+          FOREIGN KEY (namespace) REFERENCES workspaces(namespace) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS workspace_entities_lookup
+          ON workspace_entities(namespace, collection, entity_id);
+        PRAGMA user_version = 3;
+      `);
+    }
     return db;
   });
   return databasePromise;
@@ -81,11 +101,13 @@ export const workspaceV3Storage: WorkspaceV3Storage = {
     }
   },
   async transaction(operation) {
-    const db = await database();
-    let result: Awaited<ReturnType<typeof operation>>;
-    await db.withTransactionAsync(async () => {
-      result = await operation();
+    return serializeTransaction(async () => {
+      const db = await database();
+      let result: Awaited<ReturnType<typeof operation>>;
+      await db.withTransactionAsync(async () => {
+        result = await operation();
+      });
+      return result!;
     });
-    return result!;
   },
 };
