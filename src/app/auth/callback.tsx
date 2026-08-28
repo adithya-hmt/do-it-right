@@ -8,7 +8,7 @@ import { COLORS, GUTTER, RADIUS } from '@/constants/theme';
 import { useTasks } from '@/context/task-context';
 
 export default function AuthCallbackScreen() {
-  const url = Linking.useURL();
+  const url = Linking.useLinkingURL();
   const { session, completeAuthUrl } = useTasks();
   const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {

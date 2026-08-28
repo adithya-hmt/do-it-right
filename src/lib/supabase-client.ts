@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, processLock } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -14,6 +14,7 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         detectSessionInUrl: false,
         flowType: 'pkce',
+        lock: processLock,
       },
     })
   : null;

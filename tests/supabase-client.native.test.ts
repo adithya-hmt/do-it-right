@@ -1,12 +1,16 @@
-const mockCreateClient = jest.fn(() => ({ auth: {} }));
+const mockProcessLock = jest.fn();
+const mockStartAutoRefresh = jest.fn();
+const mockStopAutoRefresh = jest.fn();
+const mockCreateClient = jest.fn(() => ({ auth: { startAutoRefresh: mockStartAutoRefresh, stopAutoRefresh: mockStopAutoRefresh } }));
 const mockStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 };
 
-jest.mock('@supabase/supabase-js', () => ({ createClient: mockCreateClient }));
+jest.mock('@supabase/supabase-js', () => ({ createClient: mockCreateClient, processLock: mockProcessLock }));
 jest.mock('expo-sqlite/kv-store', () => ({ Storage: mockStorage }));
+jest.mock('react-native', () => ({ AppState: { currentState: 'active', addEventListener: jest.fn() } }));
 
 describe('native Supabase client', () => {
   const originalUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -28,7 +32,8 @@ describe('native Supabase client', () => {
     require('@/lib/supabase-client.native');
 
     const call = mockCreateClient.mock.calls[0] as unknown[] | undefined;
-    const options = call?.[2] as { auth?: { storage?: unknown }} | undefined;
+    const options = call?.[2] as { auth?: { storage?: unknown; lock?: unknown }} | undefined;
     expect(options?.auth?.storage).toBe(mockStorage);
+    expect(options?.auth?.lock).toBe(mockProcessLock);
   });
 });

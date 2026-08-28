@@ -33,9 +33,10 @@ import { migrateWorkspaceV2ToV3 } from '@/domain/workspace-v3-migration';
 import { createWorkspaceV3Repository, type WorkspaceV3Repository } from '@/lib/workspace-v3-repository';
 import { workspaceV3Storage } from '@/lib/workspace-v3-storage';
 import { claimGuestWorkspace, getAuthNamespace } from '@/domain/auth';
-import { createAuthService } from '@/lib/auth-service';
+import { createAuthService, formatAuthError } from '@/lib/auth-service';
 import { addTaskComment, createSharedSpace } from '@/domain/collaboration-commands';
 import { synchronizeDirWorkspace } from '@/lib/dir-workspace-sync';
+import { getSupabaseAuthSettings } from '@/lib/supabase-auth-settings';
 
 export type {
   DayPlan,
@@ -385,10 +386,12 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
   const linkEmail = React.useCallback(async (email: string) => {
     if (!supabase) return { error: 'Add Supabase variables in .env.local before linking an account.' };
     try {
+      const authSettings = await getSupabaseAuthSettings();
+      if (authSettings && !authSettings.email) return { error: formatAuthError('Unsupported provider: email is not enabled', 'Email sign-in is unavailable.', 'email') };
       await authService?.signInWithEmailOtp(email.trim(), Linking.createURL('auth/callback'));
       return { error: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'We could not start account linking.';
+      const message = formatAuthError(error, 'We could not start account linking.', 'email');
       return { error: message };
     }
   }, []);
@@ -399,7 +402,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       await authService.signOut();
       return { error: null };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'DIR could not sign out.' };
+      return { error: formatAuthError(error, 'DIR could not sign out.') };
     }
   }, []);
 
@@ -409,13 +412,15 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       await authService.deleteAccount();
       return { error: null };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'DIR could not delete this account.' };
+      return { error: formatAuthError(error, 'DIR could not delete this account.') };
     }
   }, []);
 
   const signInWithGoogle = React.useCallback(async () => {
     if (!authService) return { error: 'Add Supabase variables before signing in.' };
     try {
+      const authSettings = await getSupabaseAuthSettings();
+      if (authSettings && !authSettings.google) return { error: formatAuthError('Unsupported provider: google is not enabled', 'Google sign-in is unavailable.', 'google') };
       const redirectTo = Linking.createURL('auth/callback');
       await authService.signInWithGoogle(redirectTo, async (url, callback) => {
         const result = await WebBrowser.openAuthSessionAsync(url, callback);
@@ -423,7 +428,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       });
       return { error: null };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Google sign-in did not finish.' };
+      return { error: formatAuthError(error, 'Google sign-in did not finish.', 'google') };
     }
   }, []);
 
@@ -433,7 +438,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       await authService.completeAuthUrl(url);
       return { error: null };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'DIR could not complete sign-in.' };
+      return { error: formatAuthError(error, 'DIR could not complete sign-in.') };
     }
   }, []);
 

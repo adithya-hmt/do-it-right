@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { AppState } from 'react-native';
+import { createClient, processLock } from '@supabase/supabase-js';
 import { Storage } from 'expo-sqlite/kv-store';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -14,6 +15,15 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         detectSessionInUrl: false,
         flowType: 'pkce',
+        lock: processLock,
       },
     })
   : null;
+
+if (supabase) {
+  if (AppState.currentState === 'active') supabase.auth.startAutoRefresh();
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') supabase.auth.startAutoRefresh();
+    else supabase.auth.stopAutoRefresh();
+  });
+}

@@ -19,7 +19,7 @@ npx expo run:android
 
 ## Supabase
 
-Copy `.env.example` to `.env.local` and provide the project URL and publishable key. Apply the migrations, then deploy the invitation, invitation-acceptance, and account-deletion functions:
+Copy `.env.example` to `.env.local` and provide the project URL and publishable key. In Supabase Dashboard → Authentication → URL Configuration, add both native callbacks: `doitright://auth/callback` and `doitright://invite`. Keep Email enabled for passwordless one-time links. Apply the migrations, then deploy the invitation, invitation-acceptance, and account-deletion functions:
 
 ```bash
 npx supabase db push
@@ -29,6 +29,8 @@ npx supabase functions deploy delete-account
 ```
 
 Personal work requires no account. Email OTP or Google sign-in enables backup and shared Spaces.
+
+Google sign-in is optional. If you enable it in Authentication → Providers, configure the Google web client ID/secret and add Supabase's provider callback (`https://<project-ref>.supabase.co/auth/v1/callback`) in Google Cloud. The app uses the native `doitright://auth/callback` redirect and reports a setup message when the provider is not enabled.
 
 ## Verification
 
