@@ -3,6 +3,7 @@ import React from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Glyph } from '@/components/ui/glyph';
+import { BrandMark } from '@/components/ui/brand-mark';
 import { COLORS, GUTTER, RADIUS } from '@/constants/theme';
 import { useTasks } from '@/context/task-context';
 
@@ -40,7 +41,7 @@ export default function OnboardingScreen() {
         <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1, padding: GUTTER, paddingTop: 64, paddingBottom: 32, justifyContent: 'space-between', gap: 48 }}>
           <View style={{ gap: 28 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' }}><Glyph name="check" size={20} color={COLORS.white} /></View>
+              <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}><BrandMark size={29} color={COLORS.primary} /></View>
               <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900', letterSpacing: 1.5 }}>FOCUSFLOW</Text>
             </View>
             <View style={{ gap: 12 }}>

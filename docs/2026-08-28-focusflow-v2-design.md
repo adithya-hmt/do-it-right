@@ -21,4 +21,12 @@ The SQLite-backed key-value store is authoritative. A migration reads a retained
 
 The interface uses compact hierarchy, rounded dark/light surfaces, FocusFlow purple with coral accents, at least 44-point touch targets, reduced-motion support, accessible labels, keyboard avoidance, predictable Android back behavior, and functional iOS/web fallbacks. Onboarding states plainly that users can start locally and optionally link an account later in Settings.
 
+## Warm Focus brand system
+
+Warm Focus is the visual layer for the v2 workspace: warm paper (`#F8F6F1`) and ink (`#202027`) create a quiet reading field; Focus purple (`#7057FF`) marks the next action; coral (`#FF6B5C`) signals urgency without alarm; mint (`#DDF7EE`) marks completion. Dark mode keeps the same semantic roles on ink-first surfaces.
+
+The logo is an open purple loop around one dark dot: momentum around one clear next thing. Android uses Material Community Icons for familiar semantic shapes while iOS keeps SF Symbols. The launcher icon, onboarding, headers, tabs, task cards, and focus entry points all share this mark and palette.
+
+Voice capture is intentionally private-first. The microphone is opt-in from Quick Add, requests permission only after the tap, requires an installed on-device English model, keeps interim text editable, and stores no audio. If the device cannot provide offline recognition, the sheet explains why and leaves typed capture available.
+
 Legacy storage remains intact for at least one successful release. Recurrence, labels, saved filters, advanced reporting, swipe actions, drag ordering, and active voice recording are outside this release.

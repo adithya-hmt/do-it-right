@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TaskRow } from '@/components/task-row';
+import { BrandMark } from '@/components/ui/brand-mark';
 import { Glyph } from '@/components/ui/glyph';
 import { SurfaceCard } from '@/components/ui/surface-card';
 import { COLORS, DEEP_SHADOW, RADIUS } from '@/constants/theme';
@@ -14,7 +15,7 @@ export function WorkspaceHeader({ eyebrow, title, subtitle, action }: { eyebrow:
   // Tab screens already reserve 20–22dp at the top; add only the missing
   // portion of the Android status-bar inset plus a small breathing room.
   const topInset = process.env.EXPO_OS === 'android' ? Math.max(0, insets.top - 14) : 0;
-  return <View style={{ gap: 7, paddingTop: topInset }}><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={{ color: COLORS.primary, fontSize: 11, fontWeight: '900', letterSpacing: 1.25 }}>{eyebrow.toUpperCase()}</Text>{action ? <Pressable accessibilityRole="button" accessibilityLabel={action.label} onPress={action.onPress} style={({ pressed }) => [{ width: 44, height: 44, borderRadius: 15, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.65 }]}><Glyph name={action.icon} size={18} color={COLORS.ink} /></Pressable> : null}</View><Text selectable style={{ color: COLORS.ink, fontSize: 31, lineHeight: 36, fontWeight: '900', letterSpacing: -0.9 }}>{title}</Text><Text selectable style={{ color: COLORS.muted, fontSize: 13, lineHeight: 19, fontWeight: '600' }}>{subtitle}</Text></View>;
+  return <View style={{ gap: 7, paddingTop: topInset }}><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><BrandMark size={20} color={COLORS.primary} /><Text style={{ color: COLORS.primary, fontSize: 11, fontWeight: '900', letterSpacing: 1.25 }}>{eyebrow.toUpperCase()}</Text></View>{action ? <Pressable accessibilityRole="button" accessibilityLabel={action.label} onPress={action.onPress} style={({ pressed }) => [{ width: 44, height: 44, borderRadius: 15, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.65 }]}><Glyph name={action.icon} size={18} color={COLORS.ink} /></Pressable> : null}</View><Text selectable style={{ color: COLORS.ink, fontSize: 31, lineHeight: 36, fontWeight: '900', letterSpacing: -0.9 }}>{title}</Text><Text selectable style={{ color: COLORS.muted, fontSize: 13, lineHeight: 19, fontWeight: '600' }}>{subtitle}</Text></View>;
 }
 
 export function TaskSection({ title, subtitle, tasks, onComplete, emptyTitle, emptyBody }: { title: string; subtitle?: string; tasks: Task[]; onComplete: (task: Task) => void; emptyTitle: string; emptyBody: string }) {

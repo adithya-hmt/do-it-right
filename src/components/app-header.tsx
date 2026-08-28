@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, RADIUS } from '@/constants/theme';
+import { BrandMark } from '@/components/ui/brand-mark';
 import { Glyph, type GlyphName } from '@/components/ui/glyph';
 
 export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon, onAction }: { eyebrow: string; title: string; subtitle?: string; profileInitial?: string; actionIcon?: GlyphName; onAction?: () => void }) {
@@ -15,8 +16,8 @@ export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon
     <View style={{ gap: 18, paddingTop: topInset }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ width: 32, height: 32, borderRadius: 11, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}>
-            <Glyph name="spark" size={17} color={COLORS.primary} />
+          <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}>
+            <BrandMark size={25} color={COLORS.primary} />
           </View>
           <View style={{ gap: 2 }}>
             <Text style={{ color: COLORS.ink, fontSize: 12, fontWeight: '900', letterSpacing: 1.2 }}>FOCUSFLOW</Text>

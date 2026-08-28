@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/components/ui/glyph';
+import { VoiceCaptureSheet } from '@/components/voice-capture-sheet';
 import { COLORS, GUTTER, RADIUS } from '@/constants/theme';
 import { useTasks, type TaskCategory, type TaskPriority } from '@/context/task-context';
 import { getDayKey } from '@/domain/workspace';
@@ -27,6 +28,7 @@ export default function AddTaskScreen() {
   const parsedSchedule = React.useMemo(() => parseNaturalLanguageDate(title), [title]);
   const [dueDate, setDueDate] = React.useState<string | null>(null);
   const [dueTime, setDueTime] = React.useState<string | null>(null);
+  const [voiceVisible, setVoiceVisible] = React.useState(false);
   const [quickDates] = React.useState(() => {
     const today = new Date();
     const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
@@ -55,7 +57,8 @@ export default function AddTaskScreen() {
         <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 18, paddingBottom: insets.bottom + 28, gap: 23 }}>
           <View style={{ gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><View style={{ width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primarySoft }}><Glyph name="plus" size={17} color={COLORS.primary} /></View><Text style={{ color: COLORS.primary, fontSize: 11, fontWeight: '900', letterSpacing: 1.2 }}>CAPTURE THE NEXT THING</Text></View>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}><Text selectable style={{ flex: 1, color: COLORS.ink, fontSize: 29, lineHeight: 34, fontWeight: '900', letterSpacing: -0.7 }}>Quick Add</Text><Pressable disabled accessibilityRole="button" accessibilityLabel="Voice capture coming soon" accessibilityHint="Microphone is voice-ready but recording is not enabled in this release" style={{ width: 44, height: 44, borderRadius: 15, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center', opacity: 0.72 }}><Glyph name="mic" size={18} color={COLORS.primary} /></Pressable></View>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}><Text selectable style={{ flex: 1, color: COLORS.ink, fontSize: 29, lineHeight: 34, fontWeight: '900', letterSpacing: -0.7 }}>Quick Add</Text><Pressable accessibilityRole="button" accessibilityLabel="Create task with your voice" accessibilityHint="Opens private on-device voice capture" onPress={() => setVoiceVisible(true)} style={({ pressed }) => [{ width: 46, height: 46, borderRadius: 16, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.68, transform: [{ scale: 0.95 }] }]}><Glyph name="mic" size={20} color={COLORS.primary} /></Pressable></View>
+            <Text style={{ color: COLORS.muted, fontSize: 12, lineHeight: 17, fontWeight: '600' }}>Type it, or tap the mic and say the next thing out loud. You can edit everything before saving.</Text>
           </View>
 
           <View style={{ gap: 10 }}>
@@ -92,6 +95,7 @@ export default function AddTaskScreen() {
           <Pressable onPress={handleSave} disabled={!canSave} style={({ pressed }) => [{ minHeight: 56, borderRadius: RADIUS.medium, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 9, backgroundColor: canSave ? COLORS.primary : COLORS.line, opacity: canSave ? 1 : 0.8 }, pressed && { opacity: 0.75 }]}><Text style={{ color: canSave ? COLORS.contrastText : COLORS.muted, fontSize: 14, fontWeight: '900' }}>Capture task</Text><Glyph name="arrow" size={18} color={canSave ? COLORS.contrastText : COLORS.muted} /></Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+      <VoiceCaptureSheet visible={voiceVisible} onClose={() => setVoiceVisible(false)} onTranscript={handleTitleChange} />
     </>
   );
 }
