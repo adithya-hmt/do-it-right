@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Glyph } from '@/components/ui/glyph';
 import { COLORS, GUTTER, RADIUS } from '@/constants/theme';
@@ -36,7 +36,7 @@ export default function OnboardingScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Welcome', headerShown: false }} />
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.canvas }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.canvas }} behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1, padding: GUTTER, paddingTop: 64, paddingBottom: 32, justifyContent: 'space-between', gap: 48 }}>
           <View style={{ gap: 28 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -45,7 +45,7 @@ export default function OnboardingScreen() {
             </View>
             <View style={{ gap: 12 }}>
               <Text selectable style={{ color: COLORS.ink, fontSize: 38, lineHeight: 42, fontWeight: '900', letterSpacing: -1.5 }}>{step === 0 ? 'A little more room\nfor what matters.' : step === 1 ? 'What do you want\nmore space for?' : 'Give your day\na gentle shape.'}</Text>
-              <Text style={{ color: COLORS.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' }}>{step === 0 ? 'Focusflow is a private place to decide what deserves your attention today.' : step === 1 ? 'This helps the app keep your plan human when the week gets noisy.' : 'Choose a starting point. You can change it anytime.'}</Text>
+              <Text style={{ color: COLORS.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' }}>{step === 0 ? 'FocusFlow starts locally. Your tasks stay on this device, and no account is required.' : step === 1 ? 'This helps the app keep your plan human when the week gets noisy.' : 'Choose a starting point. Optional account linking stays in Settings.'}</Text>
             </View>
 
             {step === 0 ? (
@@ -62,7 +62,7 @@ export default function OnboardingScreen() {
 
           <View style={{ gap: 17 }}>
             <View style={{ flexDirection: 'row', gap: 6 }}>{[0, 1, 2].map((item) => <View key={item} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: item <= step ? COLORS.primary : COLORS.line }} />)}</View>
-            <Pressable onPress={next} style={{ minHeight: 58, borderRadius: RADIUS.medium, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10 }}><Text style={{ color: COLORS.white, fontSize: 15, fontWeight: '900' }}>{step === 2 ? 'Open my day' : 'Continue'}</Text><Glyph name="arrow" size={18} color={COLORS.white} /></Pressable>
+            <Pressable onPress={next} style={{ minHeight: 58, borderRadius: RADIUS.medium, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10 }}><Text style={{ color: COLORS.white, fontSize: 15, fontWeight: '900' }}>{step === 2 ? 'Start locally' : 'Continue'}</Text><Glyph name="arrow" size={18} color={COLORS.white} /></Pressable>
             {step > 0 ? <Pressable onPress={() => setStep((current) => current - 1)} style={{ alignItems: 'center', padding: 7 }}><Text style={{ color: COLORS.muted, fontSize: 13, fontWeight: '800' }}>Back</Text></Pressable> : null}
           </View>
         </ScrollView>

@@ -23,7 +23,7 @@ export default function SettingsScreen() {
     setBusy(true);
     const granted = await requestCalendarAccess();
     setBusy(false);
-    Alert.alert(granted ? 'Calendar connected' : 'Calendar not connected', granted ? 'Focusflow will only read today’s commitments to give your plan useful context.' : 'Calendar access is unavailable or was declined. Your planning still works without it.');
+    Alert.alert(granted ? 'Calendar connected' : 'Calendar not connected', granted ? 'FocusFlow will only read today’s commitments to give your plan useful context.' : 'Calendar access is unavailable or was declined. Your planning still works without it.');
   }
 
   async function enableReminders() {
@@ -45,7 +45,7 @@ export default function SettingsScreen() {
     <>
       <Stack.Screen options={{ title: 'Settings' }} />
       <View style={{ flex: 1, backgroundColor: COLORS.canvas }}><ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 20, paddingBottom: 42, gap: 25 }}>
-        <View style={{ gap: 6 }}><Text selectable style={{ color: COLORS.ink, fontSize: 30, lineHeight: 35, fontWeight: '900', letterSpacing: -0.8 }}>Make it yours.</Text><Text style={{ color: COLORS.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>A few quiet choices shape how Focusflow meets you.</Text></View>
+        <View style={{ gap: 6 }}><Text selectable style={{ color: COLORS.ink, fontSize: 30, lineHeight: 35, fontWeight: '900', letterSpacing: -0.8 }}>Make it yours.</Text><Text style={{ color: COLORS.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>A few quiet choices shape how FocusFlow meets you.</Text></View>
 
         <View style={{ backgroundColor: COLORS.surface, borderRadius: RADIUS.medium, padding: 17, gap: 10, boxShadow: SHADOW }}><Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900' }}>Profile name</Text><TextInput value={name} onChangeText={setName} onBlur={saveName} placeholder="Your name" placeholderTextColor={COLORS.softMuted} style={{ minHeight: 48, color: COLORS.ink, fontSize: 17, fontWeight: '700', borderBottomWidth: 1, borderBottomColor: COLORS.line }} /></View>
 

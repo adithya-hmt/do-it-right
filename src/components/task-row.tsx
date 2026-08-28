@@ -12,14 +12,11 @@ const PRIORITY_COLORS = {
   low: COLORS.softMuted,
 };
 
-export function TaskRow({ task, onToggle, onStart }: { task: Task; onToggle: () => void; onStart?: () => void }) {
+export function TaskRow({ task, onToggle, onStart, onOpen }: { task: Task; onToggle: () => void; onStart?: () => void; onOpen?: () => void }) {
   return (
     <Animated.View entering={FadeIn.duration(260)} exiting={FadeOut.duration(160)}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${task.completed ? 'Reopen' : 'Complete'} ${task.title}`}
-        onPress={onToggle}
-        style={({ pressed }) => [
+      <View
+        style={[
           {
             flexDirection: 'row',
             alignItems: 'center',
@@ -28,9 +25,8 @@ export function TaskRow({ task, onToggle, onStart }: { task: Task; onToggle: () 
             borderBottomWidth: 1,
             borderBottomColor: COLORS.line,
           },
-          pressed && { opacity: 0.7 },
         ]}>
-        <View
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: task.completed }} accessibilityLabel={`${task.completed ? 'Reopen' : 'Complete'} ${task.title}`} onPress={onToggle} hitSlop={8} style={({ pressed }) => [{ width: 44, height: 44, marginLeft: -10, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.55 }]}><View
           style={{
             width: 23,
             height: 23,
@@ -42,8 +38,8 @@ export function TaskRow({ task, onToggle, onStart }: { task: Task; onToggle: () 
             backgroundColor: task.completed ? COLORS.primary : COLORS.surface,
           }}>
           {task.completed ? <Glyph name="check" size={14} color={COLORS.white} /> : null}
-        </View>
-        <View style={{ flex: 1, gap: 4 }}>
+        </View></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Open ${task.title}`} onPress={onOpen ?? onToggle} style={({ pressed }) => [{ flex: 1, gap: 4, minHeight: 44, justifyContent: 'center' }, pressed && { opacity: 0.6 }]}>
           <Text
             selectable
             style={{
@@ -58,11 +54,11 @@ export function TaskRow({ task, onToggle, onStart }: { task: Task; onToggle: () 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
             <Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>{task.project}</Text>
             <Text style={{ color: COLORS.line, fontSize: 12 }}>•</Text>
-            <Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>{task.due}</Text>
+            <Text style={{ color: COLORS.muted, fontSize: 12, fontWeight: '600' }}>{task.dueDate ? `${task.dueDate}${task.dueTime ? ` · ${task.due}` : ''}` : 'No date'}</Text>
           </View>
-        </View>
+        </Pressable>
         {onStart && !task.completed ? <Pressable accessibilityRole="button" accessibilityLabel={`Start focus on ${task.title}`} onPress={onStart} hitSlop={8} style={({ pressed }) => [{ width: 30, height: 30, borderRadius: 10, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.55 }]}><Glyph name="play" size={10} color={COLORS.ink} /></Pressable> : <View style={{ width: 7, height: 7, borderRadius: RADIUS.pill, backgroundColor: PRIORITY_COLORS[task.priority] }} />}
-      </Pressable>
+      </View>
     </Animated.View>
   );
 }

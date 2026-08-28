@@ -18,6 +18,7 @@ export type GlyphName =
   | 'trash'
   | 'edit'
   | 'bell'
+  | 'mic'
   | 'heart'
   | 'briefcase'
   | 'sun'
@@ -51,6 +52,7 @@ const IOS_SYMBOLS: Partial<Record<GlyphName, string>> = {
   trash: 'trash',
   edit: 'pencil',
   bell: 'bell',
+  mic: 'mic',
   heart: 'heart',
   briefcase: 'briefcase',
   sun: 'sun.max',
@@ -118,6 +120,9 @@ function IconShape({ name, size, color }: { name: GlyphName; size: number; color
   }
   if (name === 'bell') {
     return <View style={{ width: iconSize * 0.58, height: iconSize * 0.66, borderWidth: stroke, borderColor: color, borderTopLeftRadius: iconSize, borderTopRightRadius: iconSize, borderBottomWidth: stroke, marginTop: 2 }}><View style={{ position: 'absolute', bottom: -iconSize * 0.16, alignSelf: 'center', width: iconSize * 0.2, height: stroke, backgroundColor: color }} /></View>;
+  }
+  if (name === 'mic') {
+    return <View style={{ width: iconSize, height: iconSize, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: iconSize * 0.38, height: iconSize * 0.62, borderRadius: iconSize, borderWidth: stroke, borderColor: color, position: 'absolute', top: iconSize * 0.04 }} /><View style={{ width: iconSize * 0.7, height: iconSize * 0.5, borderBottomWidth: stroke, borderLeftWidth: stroke, borderRightWidth: stroke, borderColor: color, borderBottomLeftRadius: iconSize, borderBottomRightRadius: iconSize, position: 'absolute', top: iconSize * 0.22 }} /><Line color={color} width={stroke} height={iconSize * 0.24} style={{ position: 'absolute', bottom: iconSize * 0.02 }} /></View>;
   }
   if (name === 'heart') {
     return <Text style={{ color, fontSize: iconSize, lineHeight: iconSize + 2, fontWeight: '800' }}>♡</Text>;

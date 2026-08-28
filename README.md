@@ -1,6 +1,6 @@
-# Focusflow
+# FocusFlow
 
-Focusflow is a private mobile productivity workspace for choosing what matters, shaping the day, and finishing with less mental noise. It is built with Expo SDK 57, Expo Router, React Native, and Supabase.
+FocusFlow is a local-first mobile productivity workspace with Inbox, Today, Upcoming, projects, Daily Three, focus sessions, routines, and weekly reviews. It is built with Expo SDK 57, Expo Router, React Native, SQLite, and optional Supabase sync.
 
 ## Run in Expo Go
 
@@ -62,7 +62,7 @@ The optional Supabase agent skills are installed under `.agents/skills` for futu
 
 ## Open source
 
-Focusflow is MIT-licensed. See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SECURITY.md`](SECURITY.md).
+FocusFlow is MIT-licensed. See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SECURITY.md`](SECURITY.md).
 
 ## Verification
 

@@ -27,8 +27,8 @@ describe('workspace primitives', () => {
     const json = workspaceToJson(buildSeedWorkspace('2026-08-27'));
     const exportDocument = JSON.parse(json) as { app: string; version: number; workspace: ReturnType<typeof buildSeedWorkspace> };
 
-    expect(exportDocument.app).toBe('Focusflow');
-    expect(exportDocument.version).toBe(1);
+    expect(exportDocument.app).toBe('FocusFlow');
+    expect(exportDocument.version).toBe(2);
     expect(exportDocument.workspace.tasks).toHaveLength(5);
   });
 });

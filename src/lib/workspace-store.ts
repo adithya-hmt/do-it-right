@@ -1,33 +1,26 @@
-import type { WorkspaceSnapshot } from '@/domain/types';
+import type { WorkspaceV2 } from '@/domain/types';
 
 import { getWorkspaceStorage } from './workspace-storage';
+import { createWorkspaceRepository } from './workspace-repository';
 
-const STORAGE_KEY = 'do-it-right.workspace.v1';
-const listeners = new Set<() => void>();
+const repository = createWorkspaceRepository(getWorkspaceStorage());
 
-export async function loadWorkspace(): Promise<WorkspaceSnapshot | null> {
-  const raw = getWorkspaceStorage()?.getItem(STORAGE_KEY);
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as WorkspaceSnapshot;
-  } catch {
-    getWorkspaceStorage()?.removeItem(STORAGE_KEY);
-    return null;
-  }
+export async function loadWorkspace(): Promise<WorkspaceV2 | null> {
+  return repository.load();
 }
 
-export async function saveWorkspace(workspace: WorkspaceSnapshot) {
-  getWorkspaceStorage()?.setItem(STORAGE_KEY, JSON.stringify(workspace));
-  listeners.forEach((listener) => listener());
+export async function saveWorkspace(workspace: WorkspaceV2) {
+  return repository.save(workspace);
 }
 
 export function subscribeWorkspace(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  return repository.subscribe(listener);
 }
 
 export async function clearWorkspace() {
-  getWorkspaceStorage()?.removeItem(STORAGE_KEY);
-  listeners.forEach((listener) => listener());
+  getWorkspaceStorage()?.removeItem('focusflow.workspace.v2');
+}
+
+export async function exportLegacyWorkspace() {
+  return repository.exportLegacy();
 }

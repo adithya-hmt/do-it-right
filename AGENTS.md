@@ -1,3 +1,3 @@
 # Expo HAS CHANGED
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v55.0.0/ before writing any code.
+Use Context7 for current Expo documentation and verify guidance against Expo SDK 57 before writing framework-specific code.

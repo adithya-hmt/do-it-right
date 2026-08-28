@@ -17,10 +17,11 @@ import type {
   WeeklyReview,
   WorkspaceSnapshot,
 } from '@/domain/types';
-import { loadWorkspace, saveWorkspace } from '@/lib/workspace-store';
+import { exportLegacyWorkspace, loadWorkspace, saveWorkspace } from '@/lib/workspace-store';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { applyTheme } from '@/constants/theme';
-import { exportWorkspace } from '@/platform/data-export';
+import { exportLegacyJson, exportWorkspace } from '@/platform/data-export';
+import { MigrationGate } from '@/components/migration-gate';
 
 export type {
   DayPlan,
@@ -57,11 +58,14 @@ type NewTaskInput = {
   notes?: string;
   due?: string;
   plannedDate?: string | null;
+  dueDate?: string | null;
+  dueTime?: string | null;
+  reminderAt?: string | null;
   priority?: TaskPriority;
   estimateMinutes?: number;
 };
 
-type TaskPatch = Partial<Pick<Task, 'title' | 'notes' | 'projectId' | 'project' | 'category' | 'due' | 'dueAt' | 'plannedDate' | 'priority' | 'estimateMinutes' | 'status'>>;
+type TaskPatch = Partial<Pick<Task, 'title' | 'notes' | 'projectId' | 'project' | 'category' | 'due' | 'dueAt' | 'plannedDate' | 'dueDate' | 'dueTime' | 'reminderAt' | 'priority' | 'estimateMinutes' | 'status'>>;
 
 type TaskContextValue = {
   tasks: Task[];
@@ -103,6 +107,15 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function formatTimeLabel(value: string | null | undefined) {
+  if (!value) return 'Anytime';
+  const match = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return value;
+  const hour = Number(match[1]);
+  if (hour > 23) return value;
+  return `${hour % 12 || 12}:${match[2]} ${hour >= 12 ? 'PM' : 'AM'}`;
+}
+
 function createId(prefix: string) {
   const uuid = globalThis.crypto?.randomUUID?.();
   return uuid ?? `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -126,14 +139,27 @@ function getFriendlyError(error: unknown) {
 function normalizeWorkspace(saved: WorkspaceSnapshot | null, day: string) {
   const seed = buildSeedWorkspace(day);
   if (!saved) return seed;
+  const projects = saved.projects.map((project) => {
+    const accent = {
+      '#8DBE2F': { color: '#7357E8', softColor: '#EEEAFE' },
+      '#D96D51': { color: '#E67870', softColor: '#FBE9E7' },
+      '#56614F': { color: '#C08A36', softColor: '#FBF0D7' },
+      '#4E7A43': { color: '#2E7A60', softColor: '#DFF3EA' },
+    }[project.color];
+    return accent ? { ...project, ...accent } : project;
+  });
+  const areas = saved.areas.map((area) => {
+    const color = { '#8DBE2F': '#7357E8', '#4E7A43': '#2E7A60', '#D96D51': '#E67870' }[area.color] ?? area.color;
+    return color === area.color ? area : { ...area, color };
+  });
   return {
     ...seed,
     ...saved,
-    profile: { ...seed.profile, ...saved.profile, focusIntent: saved.profile.focusIntent ?? seed.profile.focusIntent },
-    areas: saved.areas?.length ? saved.areas : seed.areas,
-    projects: saved.projects?.length ? saved.projects : seed.projects,
-    tasks: saved.tasks?.length ? saved.tasks : seed.tasks,
-    dayPlans: { ...seed.dayPlans, ...saved.dayPlans },
+    profile: { ...seed.profile, ...saved.profile, avatarColor: saved.profile.avatarColor === '#B6EE4A' ? '#7357E8' : saved.profile.avatarColor, focusIntent: saved.profile.focusIntent ?? seed.profile.focusIntent },
+    areas,
+    projects,
+    tasks: saved.tasks,
+    dayPlans: saved.dayPlans,
     routines: saved.routines ?? seed.routines,
     routineCompletions: saved.routineCompletions ?? [],
     focusSessions: saved.focusSessions ?? [],
@@ -147,7 +173,7 @@ function queueTaskOperation(queue: SyncOperation[], task: Task, operation: SyncO
   return [...queue.filter((item) => !(item.entity === 'task' && item.entityId === task.id)), next];
 }
 
-function mapRemoteTask(remote: RemoteTask, previous: Task | undefined, day: string): Task {
+function mapRemoteTask(remote: RemoteTask, previous: Task | undefined, day: string, position = 0): Task {
   return {
     id: remote.id,
     title: remote.name,
@@ -159,6 +185,10 @@ function mapRemoteTask(remote: RemoteTask, previous: Task | undefined, day: stri
     due: remote.due || 'Anytime',
     dueAt: previous?.dueAt ?? null,
     plannedDate: previous?.plannedDate ?? day,
+    dueDate: previous?.dueDate ?? previous?.plannedDate ?? day,
+    dueTime: previous?.dueTime ?? null,
+    reminderAt: previous?.reminderAt ?? null,
+    position: previous?.position ?? position,
     priority: remote.priority,
     estimateMinutes: previous?.estimateMinutes ?? 25,
     completed: remote.completed,
@@ -174,6 +204,8 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
   const systemColorScheme = useColorScheme();
   const [workspace, setWorkspace] = React.useState<WorkspaceSnapshot>(() => buildSeedWorkspace(today));
   const [hydrated, setHydrated] = React.useState(false);
+  const [migrationError, setMigrationError] = React.useState<string | null>(null);
+  const [migrationAttempt, setMigrationAttempt] = React.useState(0);
   const [syncStatus, setSyncStatus] = React.useState<SyncStatus>(isSupabaseConfigured ? 'loading' : 'demo');
   const [syncMessage, setSyncMessage] = React.useState<string | null>(isSupabaseConfigured ? null : 'Your workspace is saved on this device. Add Supabase variables for cloud sync.');
   const workspaceRef = React.useRef(workspace);
@@ -216,7 +248,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       const { data, error } = await supabase.from('todos').select(REMOTE_FIELDS).eq('user_id', session.user.id).order('created_at', { ascending: true });
       if (error) throw error;
       if (data?.length) {
-        const remoteTasks = data.map((item) => mapRemoteTask(item as unknown as RemoteTask, local.tasks.find((task) => task.id === item.id), today));
+        const remoteTasks = data.map((item, index) => mapRemoteTask(item as unknown as RemoteTask, local.tasks.find((task) => task.id === item.id), today, index));
         replaceWorkspace({ ...local, tasks: remoteTasks, syncQueue: [] });
         setSyncStatus('synced');
         setSyncMessage(null);
@@ -224,7 +256,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       }
       const { data: seeded, error: seedError } = await supabase.from('todos').insert(local.tasks.map(toRemoteTask)).select(REMOTE_FIELDS);
       if (seedError) throw seedError;
-      const syncedTasks = seeded?.length ? seeded.map((item) => mapRemoteTask(item as unknown as RemoteTask, local.tasks.find((task) => task.title === item.name), today)) : local.tasks;
+      const syncedTasks = seeded?.length ? seeded.map((item, index) => mapRemoteTask(item as unknown as RemoteTask, local.tasks.find((task) => task.title === item.name), today, index)) : local.tasks;
       replaceWorkspace({ ...local, tasks: syncedTasks, syncQueue: [] });
       setSyncStatus('synced');
       setSyncMessage(null);
@@ -242,17 +274,21 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       replaceWorkspace(local);
       setHydrated(true);
       if (isSupabaseConfigured) void hydrateRemote(local);
+    }).catch((error: unknown) => {
+      if (!active) return;
+      setHydrated(false);
+      setMigrationError(error instanceof Error ? error.message : 'Your legacy workspace could not be migrated.');
     });
     return () => {
       active = false;
     };
-  }, [hydrateRemote, replaceWorkspace, today]);
+  }, [hydrateRemote, migrationAttempt, replaceWorkspace, today]);
 
   const syncNow = React.useCallback(async () => {
     if (!supabase || !hydrated || syncInFlight.current) return;
     const queued = workspaceRef.current.syncQueue.filter((operation) => operation.entity === 'task');
     if (!queued.length) {
-      if (syncStatus !== 'demo') setSyncStatus('synced');
+      setSyncStatus('synced');
       return;
     }
     syncInFlight.current = true;
@@ -280,13 +316,13 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     } finally {
       syncInFlight.current = false;
     }
-  }, [commit, ensureSession, hydrated, syncStatus, today]);
+  }, [commit, ensureSession, hydrated, today]);
 
   React.useEffect(() => {
-    if (!hydrated || !workspace.syncQueue.length) return;
-    const timer = setTimeout(() => void syncNow(), 0);
+    if (!hydrated || !workspace.syncQueue.length || syncStatus === 'loading') return;
+    const timer = setTimeout(() => void syncNow(), syncStatus === 'error' ? 5000 : 0);
     return () => clearTimeout(timer);
-  }, [hydrated, syncNow, workspace.syncQueue.length]);
+  }, [hydrated, syncNow, syncStatus, workspace.syncQueue.length]);
 
   const tasks = workspace.tasks;
   const projects = React.useMemo(() => workspace.projects.map((project) => {
@@ -300,16 +336,17 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       const task = current.tasks.find((item) => item.id === id);
       if (!task) return current;
       const completed = !task.completed;
-      const updated = { ...task, completed, status: completed ? 'completed' as const : 'planned' as const, completedAt: completed ? nowIso() : null, updatedAt: nowIso(), syncState: 'pending' as const };
+      const updated = { ...task, completed, status: completed ? 'completed' as const : task.dueDate || task.projectId ? 'planned' as const : 'inbox' as const, completedAt: completed ? nowIso() : null, updatedAt: nowIso(), syncState: 'pending' as const };
       return { ...current, tasks: current.tasks.map((item) => item.id === id ? updated : item), syncQueue: queueTaskOperation(current.syncQueue, updated) };
     });
   }, [commit]);
 
   const addTask = React.useCallback((input: NewTaskInput) => {
     const project = projects.find((item) => item.id === input.projectId) ?? projects.find((item) => item.name === input.project);
-    const task: Task = { id: `local-${Date.now()}`, title: input.title.trim(), notes: input.notes ?? '', projectId: project?.id ?? input.projectId ?? null, project: project?.name ?? input.project ?? 'Inbox', category: input.category ?? 'Work', status: input.plannedDate === null ? 'inbox' : 'planned', due: input.due ?? 'Anytime', dueAt: null, plannedDate: input.plannedDate === undefined ? today : input.plannedDate, priority: input.priority ?? 'medium', estimateMinutes: input.estimateMinutes ?? 25, completed: false, completedAt: null, syncState: supabase ? 'pending' : 'clean', createdAt: nowIso(), updatedAt: nowIso() };
+    const dueDate = input.dueDate ?? (input.plannedDate === undefined ? today : input.plannedDate);
+    const task: Task = { id: `local-${Date.now()}`, title: input.title.trim(), notes: input.notes ?? '', projectId: project?.id ?? input.projectId ?? null, project: project?.name ?? input.project ?? 'Inbox', category: input.category ?? 'Work', status: dueDate === null && !project ? 'inbox' : 'planned', due: input.due && input.due !== input.dueTime ? input.due : formatTimeLabel(input.dueTime), dueAt: null, plannedDate: dueDate, dueDate, dueTime: input.dueTime ?? null, reminderAt: input.reminderAt ?? null, position: workspace.tasks.length, priority: input.priority ?? 'medium', estimateMinutes: input.estimateMinutes ?? 25, completed: false, completedAt: null, syncState: supabase ? 'pending' : 'clean', createdAt: nowIso(), updatedAt: nowIso() };
     commit((current) => ({ ...current, tasks: [...current.tasks, task], syncQueue: supabase ? queueTaskOperation(current.syncQueue, task) : current.syncQueue }));
-  }, [commit, projects, today]);
+  }, [commit, projects, today, workspace.tasks.length]);
 
   const updateTask = React.useCallback((id: string, patch: TaskPatch) => {
     commit((current) => {
@@ -377,7 +414,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
   const exportData = React.useCallback(() => exportWorkspace(workspaceRef.current), []);
 
   const addProject = React.useCallback((input: { name: string; outcome: string; areaId: string }) => {
-    const project: Project = { id: createId('project'), name: input.name.trim(), eyebrow: 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: input.areaId, status: 'active', targetDate: null, color: '#8DBE2F', softColor: '#E8F8BE', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0 };
+    const project: Project = { id: createId('project'), name: input.name.trim(), eyebrow: 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: input.areaId, status: 'active', targetDate: null, color: '#7357E8', softColor: '#EEEAFE', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0 };
     commit((current) => ({ ...current, projects: [...current.projects, project] }));
   }, [commit, workspace.projects.length]);
 
@@ -417,6 +454,8 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     updateProject,
     syncNow: () => void syncNow(),
   }), [addProject, addTask, completeRoutine, exportData, finishFocus, finishOnboarding, isRoutineComplete, linkEmail, projects, saveWeeklyReview, setDailyThree, setIntention, setTaskStatus, startFocus, syncMessage, syncNow, syncStatus, tasks, todayPlan, toggleTask, updateProfile, updateProject, updateTask, workspace.areas, workspace.focusSessions, workspace.profile, workspace.routineCompletions, workspace.routines, workspace.weeklyReviews]);
+
+  if (!hydrated) return <MigrationGate error={migrationError} onRetry={() => { setMigrationError(null); setMigrationAttempt((attempt) => attempt + 1); }} onExport={() => { void exportLegacyWorkspace().then((raw) => raw ? exportLegacyJson(raw) : false); }} />;
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
 }

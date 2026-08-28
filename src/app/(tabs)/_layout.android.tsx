@@ -18,7 +18,7 @@ export default function AndroidTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: '#AAB4A5',
+        tabBarInactiveTintColor: COLORS.contrastMuted,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
@@ -31,7 +31,7 @@ export default function AndroidTabsLayout() {
           backgroundColor: COLORS.contrast,
           borderTopWidth: 0,
           borderRadius: 24,
-          boxShadow: '0 12px 28px rgba(17, 22, 15, 0.22)',
+          boxShadow: '0 12px 28px rgba(37, 30, 56, 0.22)',
         },
         tabBarLabelStyle: { fontSize: 10, fontWeight: '900' },
         tabBarItemStyle: { gap: 3 },
@@ -39,31 +39,34 @@ export default function AndroidTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          title: 'Inbox',
+          tabBarIcon: ({ color }) => <TabIcon name="inbox" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="today"
+        options={{
           title: 'Today',
           tabBarIcon: ({ color }) => <TabIcon name="today" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="plan"
+        name="upcoming"
         options={{
-          title: 'Plan',
+          title: 'Upcoming',
           tabBarIcon: ({ color }) => <TabIcon name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="projects"
+        name="browse"
         options={{
-          title: 'Projects',
+          title: 'Browse',
           tabBarIcon: ({ color }) => <TabIcon name="projects" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="you"
-        options={{
-          title: 'You',
-          tabBarIcon: ({ color }) => <TabIcon name="user" color={color} />,
-        }}
-      />
+      <Tabs.Screen name="plan" options={{ href: null }} />
+      <Tabs.Screen name="projects" options={{ href: null }} />
+      <Tabs.Screen name="you" options={{ href: null }} />
     </Tabs>
   );
 }

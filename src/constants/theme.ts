@@ -3,51 +3,51 @@ import { Platform } from 'react-native';
 import type { ThemePreference } from '@/domain/types';
 
 export const LIGHT_COLORS = {
-  canvas: '#F1F2EC',
-  surface: '#FAFBF7',
-  ink: '#151814',
-  muted: '#687064',
-  softMuted: '#A0A89A',
-  line: '#DEE3D9',
-  primary: '#B6EE4A',
-  primarySoft: '#E8F8BE',
-  coral: '#D96D51',
-  coralSoft: '#F8E4DA',
-  lavender: '#E4E9DE',
-  lavenderInk: '#56614F',
-  mint: '#DDF0D4',
-  mintInk: '#4E7A43',
-  amber: '#E3AC4D',
+  canvas: '#F7F6FB',
+  surface: '#FFFFFF',
+  ink: '#211C2D',
+  muted: '#756F82',
+  softMuted: '#AAA4B8',
+  line: '#E8E4F0',
+  primary: '#7357E8',
+  primarySoft: '#EEEAFE',
+  coral: '#E67870',
+  coralSoft: '#FBE9E7',
+  lavender: '#F0EDFF',
+  lavenderInk: '#5E4CA8',
+  mint: '#DFF3EA',
+  mintInk: '#2E7A60',
+  amber: '#F4C76A',
   white: '#FFFFFF',
-  contrast: '#171B16',
-  contrastText: '#F5F7EE',
-  contrastMuted: '#AAB4A5',
-  contrastSurface: '#252D22',
-  contrastLine: '#394333',
+  contrast: '#251E38',
+  contrastText: '#FFFFFF',
+  contrastMuted: '#C8C0D6',
+  contrastSurface: '#3B3158',
+  contrastLine: '#51466F',
 };
 
 export const DARK_COLORS = {
-  canvas: '#0E110E',
-  surface: '#171B16',
-  ink: '#F3F6EC',
-  muted: '#A6B09F',
-  softMuted: '#737D6E',
-  line: '#2B3329',
-  primary: '#B6EE4A',
-  primarySoft: '#293A18',
-  coral: '#F09270',
-  coralSoft: '#432A21',
-  lavender: '#263126',
-  lavenderInk: '#BDCAA8',
-  mint: '#1F3A1D',
-  mintInk: '#9DD989',
-  amber: '#EAC064',
+  canvas: '#100D17',
+  surface: '#191522',
+  ink: '#F8F5FF',
+  muted: '#AAA1BA',
+  softMuted: '#776D87',
+  line: '#2C2537',
+  primary: '#A997FF',
+  primarySoft: '#2D234E',
+  coral: '#FF9389',
+  coralSoft: '#482A30',
+  lavender: '#312553',
+  lavenderInk: '#CBBEFF',
+  mint: '#1D3A32',
+  mintInk: '#86D9B5',
+  amber: '#F5C86A',
   white: '#FFFFFF',
-  contrast: '#F3F6EC',
-  contrastText: '#10140F',
-  contrastMuted: '#5F6A5B',
-  contrastSurface: '#E5EBDD',
-  contrastLine: '#D0D9C7',
+  contrast: '#251E38',
+  contrastText: '#FFFFFF',
+  contrastMuted: '#C8C0D6',
+  contrastSurface: '#3B3158',
+  contrastLine: '#51466F',
 };
 
 export type ThemeColors = typeof LIGHT_COLORS;
@@ -68,8 +68,8 @@ export const FONTS = Platform.select({
   default: { sans: 'normal', rounded: 'normal', mono: 'monospace' },
 });
 
-export const SHADOW = '0 8px 24px rgba(20, 26, 18, 0.07)';
-export const DEEP_SHADOW = '0 14px 34px rgba(20, 26, 18, 0.16)';
+export const SHADOW = '0 8px 24px rgba(37, 30, 56, 0.07)';
+export const DEEP_SHADOW = '0 14px 34px rgba(37, 30, 56, 0.16)';
 
 export const RADIUS = {
   small: 12,
@@ -78,4 +78,4 @@ export const RADIUS = {
   pill: 999,
 } as const;
 
-export const GUTTER = 18;
+export const GUTTER = 20;

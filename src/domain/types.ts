@@ -58,6 +58,10 @@ export type Task = {
   due: string;
   dueAt: string | null;
   plannedDate: string | null;
+  dueDate: string | null;
+  dueTime: string | null;
+  reminderAt: string | null;
+  position: number;
   priority: TaskPriority;
   estimateMinutes: number;
   completed: boolean;
@@ -120,7 +124,8 @@ export type SyncOperation = {
   lastError: string | null;
 };
 
-export type WorkspaceSnapshot = {
+export type WorkspaceV2 = {
+  schemaVersion: 2;
   profile: Profile;
   areas: LifeArea[];
   projects: Project[];
@@ -133,3 +138,12 @@ export type WorkspaceSnapshot = {
   syncQueue: SyncOperation[];
   syncCursor: string | null;
 };
+
+export type LegacyTaskV1 = Omit<Task, 'dueDate' | 'dueTime' | 'reminderAt' | 'position'>;
+
+export type LegacyWorkspaceV1 = Omit<WorkspaceV2, 'schemaVersion' | 'tasks'> & {
+  tasks: LegacyTaskV1[];
+};
+
+/** @deprecated Prefer WorkspaceV2. Retained as a compatibility name for existing consumers. */
+export type WorkspaceSnapshot = WorkspaceV2;

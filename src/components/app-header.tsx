@@ -10,7 +10,7 @@ export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon
     <View style={{ gap: 18 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ width: 32, height: 32, borderRadius: 11, backgroundColor: COLORS.ink, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 32, height: 32, borderRadius: 11, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}>
             <Glyph name="spark" size={17} color={COLORS.primary} />
           </View>
           <View style={{ gap: 2 }}>
@@ -21,7 +21,7 @@ export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
           {actionIcon && onAction ? <Pressable accessibilityRole="button" accessibilityLabel={`Open ${actionIcon}`} onPress={onAction} hitSlop={8} style={({ pressed }) => [{ width: 38, height: 38, borderRadius: RADIUS.small, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.55 }]}><Glyph name={actionIcon} size={17} color={COLORS.ink} /></Pressable> : null}
           <Pressable accessibilityRole="button" accessibilityLabel="Open profile" onPress={() => router.push('/(tabs)/you')} style={({ pressed }) => [{ width: 38, height: 38, borderRadius: 14, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' }, pressed && { transform: [{ scale: 0.94 }] }]}>
-            <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900' }}>{profileInitial ?? 'A'}</Text>
+            <Text style={{ color: COLORS.contrastText, fontSize: 13, fontWeight: '900' }}>{profileInitial ?? 'A'}</Text>
           </Pressable>
         </View>
       </View>
