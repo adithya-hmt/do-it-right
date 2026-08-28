@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph, type GlyphName } from '@/components/ui/glyph';
 import { COLORS } from '@/constants/theme';
@@ -10,6 +11,8 @@ function TabIcon({ name, color }: { name: GlyphName; color: ColorValue }) {
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const tabBarBottom = Math.max(14, insets.bottom + 10);
   return (
     <Tabs
       screenOptions={{
@@ -21,7 +24,7 @@ export default function TabsLayout() {
           position: 'absolute',
           left: 16,
           right: 16,
-          bottom: 14,
+          bottom: tabBarBottom,
           height: 70,
           paddingTop: 8,
           paddingBottom: 8,

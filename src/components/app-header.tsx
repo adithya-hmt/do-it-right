@@ -1,13 +1,18 @@
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, RADIUS } from '@/constants/theme';
 import { Glyph, type GlyphName } from '@/components/ui/glyph';
 
 export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon, onAction }: { eyebrow: string; title: string; subtitle?: string; profileInitial?: string; actionIcon?: GlyphName; onAction?: () => void }) {
+  const insets = useSafeAreaInsets();
+  // The tab scroll content already starts with 20dp of padding, so avoid
+  // stacking the full status-bar inset on top of that spacing.
+  const topInset = process.env.EXPO_OS === 'android' ? Math.max(0, insets.top - 14) : 0;
   return (
-    <View style={{ gap: 18 }}>
+    <View style={{ gap: 18, paddingTop: topInset }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <View style={{ width: 32, height: 32, borderRadius: 11, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}>

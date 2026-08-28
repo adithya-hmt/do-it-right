@@ -36,7 +36,7 @@ export default function OnboardingScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Welcome', headerShown: false }} />
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.canvas }} behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.canvas }} behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1, padding: GUTTER, paddingTop: 64, paddingBottom: 32, justifyContent: 'space-between', gap: 48 }}>
           <View style={{ gap: 28 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

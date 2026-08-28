@@ -1,19 +1,21 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { COLORS } from '@/constants/theme';
 import { TaskProvider } from '@/context/task-context';
 
 export default function RootLayout() {
   return (
-    <TaskProvider>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: COLORS.canvas },
-          headerShown: false,
-        }}>
+    <SafeAreaProvider>
+      <TaskProvider>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: COLORS.canvas },
+            headerShown: false,
+          }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ presentation: 'card', headerShown: false }} />
         <Stack.Screen
@@ -61,7 +63,8 @@ export default function RootLayout() {
         <Stack.Screen name="daily-three" options={{ headerShown: true, headerTitle: 'Daily Three', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="routines" options={{ headerShown: true, headerTitle: 'Routines', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="completed" options={{ headerShown: true, headerTitle: 'Completed', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-      </Stack>
-    </TaskProvider>
+        </Stack>
+      </TaskProvider>
+    </SafeAreaProvider>
   );
 }
