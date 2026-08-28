@@ -1,5 +1,5 @@
-import type { WorkspaceSnapshot } from '@/domain/types';
+import type { WorkspaceV2, WorkspaceV3 } from '@/domain/types';
 
-export function workspaceToJson(workspace: WorkspaceSnapshot) {
-  return JSON.stringify({ exportedAt: new Date().toISOString(), app: 'FocusFlow', version: 2, workspace }, null, 2);
+export function workspaceToJson(workspace: WorkspaceV2 | WorkspaceV3) {
+  return JSON.stringify({ exportedAt: new Date().toISOString(), app: 'DIR', version: workspace.schemaVersion, workspace }, null, 2);
 }

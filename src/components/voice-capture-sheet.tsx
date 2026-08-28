@@ -25,7 +25,7 @@ function describeError(code: ExpoSpeechRecognitionErrorCode) {
     case 'speech-timeout': return 'I didn’t catch anything. Try one short sentence.';
     case 'service-not-allowed':
     case 'language-not-supported': return 'Offline speech is not installed for English on this phone yet. Download the English voice model in your system speech settings.';
-    case 'network': return 'The phone speech service asked for a network. Nothing was saved by FocusFlow; you can type instead.';
+    case 'network': return 'The phone speech service asked for a network. Nothing was saved by DIR; you can type instead.';
     default: return 'Voice capture stopped. You can try again or type the task instead.';
   }
 }

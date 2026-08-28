@@ -1,0 +1,68 @@
+
+project_id = "dir-collaboration"
+
+[api]
+enabled = true
+port = 56521
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 56522
+shadow_port = 56520
+major_version = 17
+
+[studio]
+enabled = true
+port = 56523
+api_url = "http://127.0.0.1"
+
+[local_smtp]
+enabled = true
+port = 56524
+
+[analytics]
+enabled = true
+port = 56527
+backend = "postgres"
+
+[auth]
+enabled = true
+site_url = "doitright://auth/callback"
+additional_redirect_urls = ["doitright://auth/callback", "doitright://invite"]
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[functions.invite-member]
+enabled = true
+verify_jwt = true
+import_map = "./functions/invite-member/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/invite-member/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/invite-member/*.html" ]
+
+[functions.delete-account]
+enabled = true
+verify_jwt = true
+import_map = "./functions/delete-account/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/delete-account/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/delete-account/*.html" ]
+
+[functions.accept-invitation]
+enabled = true
+verify_jwt = true
+import_map = "./functions/accept-invitation/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/accept-invitation/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/accept-invitation/*.html" ]

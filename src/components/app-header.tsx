@@ -20,7 +20,7 @@ export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon
             <BrandMark size={25} color={COLORS.primary} />
           </View>
           <View style={{ gap: 2 }}>
-            <Text style={{ color: COLORS.ink, fontSize: 12, fontWeight: '900', letterSpacing: 1.2 }}>FOCUSFLOW</Text>
+            <Text style={{ color: COLORS.ink, fontSize: 12, fontWeight: '900', letterSpacing: 1.2 }}>DIR · DO IT RIGHT</Text>
             <Text style={{ color: COLORS.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.4 }}>{eyebrow}</Text>
           </View>
         </View>

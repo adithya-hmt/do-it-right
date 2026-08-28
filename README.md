@@ -1,76 +1,44 @@
-# FocusFlow
+# DIR — Do It Right
 
-FocusFlow is a local-first mobile productivity workspace with Inbox, Today, Upcoming, projects, Daily Three, focus sessions, routines, and weekly reviews. It is built with Expo SDK 57, Expo Router, React Native, SQLite, and optional Supabase sync.
+DIR is a warm, local-first task companion for personal life, work, study, family, and shared projects. It combines Inbox, Today, Upcoming, projects, shared Spaces, Daily Three, a focus timer, routines, and weekly reviews without putting an AI agent between people and their work.
 
-## Run in Expo Go
+Built with Expo SDK 57, Expo Router, React Native, SQLite, and optional Supabase sync. Android is the release-quality target; iOS and web remain functional.
 
-```bash
-npm install
-npx expo start
-```
-
-For Android over USB, use Expo's localhost connection so the CLI can forward the
-Metro port through ADB:
-
-```bash
-npm run android
-```
-
-The device must appear as `device` in `adb devices`.
-
-Scan the QR code from the terminal with Expo Go. For devices on different networks, use:
-
-```bash
-npx expo start --tunnel
-```
-
-## The workflow
-
-- Onboarding: choose your name, focus intent, and morning anchor.
-- Today: a focused brief, Daily Three, read-only calendar context, progress, task filters, search, and quick capture.
-- Plan: set an intention, choose up to three tasks, timebox work, complete routines, and keep the rest in view.
-- Projects: create projects, see real progress derived from tasks, and open a project workspace.
-- Focus: start a lightweight timer against a task or project; sessions stay in your private workspace and appear in Focus history.
-- You: review signals, focus history, life areas, weekly reflection, settings, account linking, export, calendar, and reminders.
-
-The workspace is local-first so it remains usable offline and immediately demoable in Expo Go. When Supabase is configured, tasks sync to a per-user cloud workspace through Row Level Security.
-
-## Supabase setup
-
-The app is configured for Supabase using the mobile-safe `EXPO_PUBLIC_*` variables in `.env.local`:
+## Run locally
 
 ```bash
 npm install
+npm start
 ```
 
-The publishable key is safe to ship in a client app when Row Level Security is enabled. Never put a Supabase service-role or secret key in Expo code.
-
-1. Open the Supabase SQL Editor for the configured project.
-2. Run [`supabase/migrations/20260827_000001_workspace_foundation.sql`](supabase/migrations/20260827_000001_workspace_foundation.sql). The older [`supabase/todos.sql`](supabase/todos.sql) file is retained as a minimal compatibility setup.
-3. In Authentication → Providers, enable Anonymous Sign-Ins.
-4. Restart Expo after changing environment variables:
+Voice capture uses the native `expo-speech-recognition` module and therefore needs a development or release build rather than Expo Go:
 
 ```bash
-npx expo start --clear --tunnel
+npx expo run:android
 ```
 
-The app creates an anonymous session, loads each user’s tasks, and seeds starter tasks for a new workspace. If the table or provider is not ready, it stays usable with local demo data and shows the setup message in Today. The account screen can later link that anonymous workspace to an email address.
+## Supabase
 
-The `@supabase/ssr` package from the Next.js snippet remains installed as requested, but its cookie/middleware helpers are not imported: Expo uses the native Supabase client with persisted SQLite-backed storage instead of Next.js server middleware.
+Copy `.env.example` to `.env.local` and provide the project URL and publishable key. Apply the migrations, then deploy the invitation, invitation-acceptance, and account-deletion functions:
 
-The optional Supabase agent skills are installed under `.agents/skills` for future database and security work. Calendar access is read-only; reminders are opt-in. If a native device API is unavailable in the current Expo Go client, the app falls back gracefully and remains usable.
+```bash
+npx supabase db push
+npx supabase functions deploy invite-member
+npx supabase functions deploy accept-invitation
+npx supabase functions deploy delete-account
+```
 
-## Open source
-
-FocusFlow is MIT-licensed. See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SECURITY.md`](SECURITY.md).
+Personal work requires no account. Email OTP or Google sign-in enables backup and shared Spaces.
 
 ## Verification
 
 ```bash
 npm test
 npx tsc --noEmit
-npx expo lint
-npx expo export --platform web
+npm run lint
+npx supabase db lint --local --level warning
+npx supabase test db
+npx expo export --platform android
 ```
 
-See [`docs/superpowers/specs/2026-08-27-focusflow-design.md`](docs/superpowers/specs/2026-08-27-focusflow-design.md) for the product and design decisions.
+Product and design decisions are documented in [`docs/dir-product-design.md`](docs/dir-product-design.md). Brand assets and rules are in [`assets/brand/BRAND.md`](assets/brand/BRAND.md).

@@ -42,11 +42,11 @@ export default function OnboardingScreen() {
           <View style={{ gap: 28 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}><BrandMark size={29} color={COLORS.primary} /></View>
-              <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900', letterSpacing: 1.5 }}>FOCUSFLOW</Text>
+              <Text style={{ color: COLORS.ink, fontSize: 13, fontWeight: '900', letterSpacing: 1.5 }}>DIR · DO IT RIGHT</Text>
             </View>
             <View style={{ gap: 12 }}>
               <Text selectable style={{ color: COLORS.ink, fontSize: 38, lineHeight: 42, fontWeight: '900', letterSpacing: -1.5 }}>{step === 0 ? 'A little more room\nfor what matters.' : step === 1 ? 'What do you want\nmore space for?' : 'Give your day\na gentle shape.'}</Text>
-              <Text style={{ color: COLORS.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' }}>{step === 0 ? 'FocusFlow starts locally. Your tasks stay on this device, and no account is required.' : step === 1 ? 'This helps the app keep your plan human when the week gets noisy.' : 'Choose a starting point. Optional account linking stays in Settings.'}</Text>
+              <Text style={{ color: COLORS.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' }}>{step === 0 ? 'DIR starts locally. Your tasks stay on this device, and no account is required.' : step === 1 ? 'This keeps your plan human when the week gets noisy.' : 'Choose a starting point. Sign in later only if you want sync or shared spaces.'}</Text>
             </View>
 
             {step === 0 ? (

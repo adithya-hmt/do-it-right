@@ -1,10 +1,10 @@
-import type { WorkspaceSnapshot } from '@/domain/types';
+import type { WorkspaceV2, WorkspaceV3 } from '@/domain/types';
 import { workspaceToJson } from '@/domain/workspace-export';
 
 export { workspaceToJson } from '@/domain/workspace-export';
 
-export async function exportWorkspace(workspace: WorkspaceSnapshot) {
-  return exportJson(workspaceToJson(workspace), 'focusflow');
+export async function exportWorkspace(workspace: WorkspaceV2 | WorkspaceV3) {
+  return exportJson(workspaceToJson(workspace), 'dir-workspace');
 }
 
 export async function exportLegacyJson(json: string) {

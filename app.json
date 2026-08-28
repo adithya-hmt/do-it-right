@@ -1,31 +1,36 @@
 {
   "expo": {
-    "name": "FocusFlow",
-    "slug": "focusflow",
+    "name": "DIR — Do It Right",
+    "slug": "do-it-right",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "doitright",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "infoPlist": {
-        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
+        "NSSpeechRecognitionUsageDescription": "DIR uses speech recognition only when you choose voice add.",
+        "NSMicrophoneUsageDescription": "DIR uses the microphone only while you are capturing a task."
       },
       "bundleIdentifier": "com.adithyahmt.doitright"
     },
     "android": {
       "package": "com.adithyahmt.doitright",
       "adaptiveIcon": {
-        "backgroundColor": "#7057FF",
+        "backgroundColor": "#C44F2B",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
+      "predictiveBackGestureEnabled": true,
       "permissions": [
         "android.permission.RECORD_AUDIO"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -37,7 +42,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#251E38",
+          "backgroundColor": "#F7F2E8",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

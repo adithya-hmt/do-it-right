@@ -4,6 +4,20 @@
 
 create extension if not exists pgcrypto;
 
+-- Fresh installations may not have the original compatibility table yet.
+-- Keep it available for one rollback release while DIR v3 uses dir_tasks.
+create table if not exists public.todos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  name text not null check (char_length(trim(name)) > 0),
+  project text not null default 'Inbox',
+  category text not null default 'Work' check (category in ('Work', 'Personal')),
+  due text not null default 'Anytime',
+  priority text not null default 'medium' check (priority in ('high', 'medium', 'low')),
+  completed boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 alter table if exists public.todos add column if not exists notes text not null default '';
 alter table if exists public.todos add column if not exists status text not null default 'planned' check (status in ('inbox', 'planned', 'in_progress', 'completed', 'cancelled'));
 alter table if exists public.todos add column if not exists planned_date date;

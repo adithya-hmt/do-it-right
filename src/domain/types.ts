@@ -5,6 +5,14 @@ export type TaskPriority = 'high' | 'medium' | 'low';
 export type TaskCategory = 'Work' | 'Personal';
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type SyncState = 'clean' | 'pending' | 'failed' | 'conflicted';
+export type SpaceRole = 'owner' | 'admin' | 'member';
+export type MembershipStatus = 'invited' | 'active' | 'removed';
+
+export type AppearancePreference = {
+  mode: ThemePreference;
+  paletteId: 'warm' | 'forest' | 'ocean' | 'berry' | 'gold' | 'custom';
+  customAccent: string | null;
+};
 
 export type Profile = {
   id: string;
@@ -124,6 +132,18 @@ export type SyncOperation = {
   lastError: string | null;
 };
 
+export type SyncMutation = {
+  id: string;
+  entity: 'profile' | 'area' | 'project' | 'task' | 'day_plan' | 'routine' | 'review' | 'space' | 'membership' | 'comment' | 'notification';
+  entityId: string;
+  operation: 'upsert' | 'delete';
+  payload: unknown;
+  baseRevision: number;
+  createdAt: string;
+  attempts: number;
+  lastError: string | null;
+};
+
 export type WorkspaceV2 = {
   schemaVersion: 2;
   profile: Profile;
@@ -137,6 +157,105 @@ export type WorkspaceV2 = {
   weeklyReviews: Record<string, WeeklyReview>;
   syncQueue: SyncOperation[];
   syncCursor: string | null;
+};
+
+export type Space = {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  revision: number;
+  deletedAt: string | null;
+};
+
+export type SpaceMember = {
+  id: string;
+  spaceId: string;
+  userId: string;
+  displayName: string;
+  email: string | null;
+  avatarColor: string;
+  role: SpaceRole;
+  status: MembershipStatus;
+  joinedAt: string | null;
+};
+
+export type Invitation = {
+  id: string;
+  spaceId: string;
+  email: string;
+  role: Exclude<SpaceRole, 'owner'>;
+  invitedBy: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+};
+
+export type TaskComment = {
+  id: string;
+  taskId: string;
+  spaceId: string;
+  authorId: string;
+  body: string;
+  mentionedUserIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export type ActivityEvent = {
+  id: string;
+  spaceId: string;
+  actorId: string;
+  entity: 'space' | 'project' | 'task' | 'comment' | 'member';
+  entityId: string;
+  action: string;
+  createdAt: string;
+};
+
+export type WorkspaceNotification = {
+  id: string;
+  userId: string;
+  spaceId: string | null;
+  kind: 'invitation' | 'assignment' | 'mention' | 'comment';
+  entityId: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export type TaskV3 = Task & {
+  spaceId: string | null;
+  createdBy: string;
+  assigneeId: string | null;
+  revision: number;
+  deletedAt: string | null;
+};
+
+export type ProjectV3 = Project & {
+  spaceId: string | null;
+  createdBy: string;
+  revision: number;
+  deletedAt: string | null;
+};
+
+export type ProfileV3 = Profile & { appearance: AppearancePreference };
+
+export type WorkspaceV3 = Omit<WorkspaceV2, 'schemaVersion' | 'profile' | 'projects' | 'tasks' | 'syncQueue'> & {
+  schemaVersion: 3;
+  profile: ProfileV3;
+  projects: ProjectV3[];
+  tasks: TaskV3[];
+  spaces: Space[];
+  memberships: SpaceMember[];
+  invitations: Invitation[];
+  comments: TaskComment[];
+  activity: ActivityEvent[];
+  notifications: WorkspaceNotification[];
+  syncQueue: SyncMutation[];
 };
 
 export type LegacyTaskV1 = Omit<Task, 'dueDate' | 'dueTime' | 'reminderAt' | 'position'>;

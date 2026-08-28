@@ -6,8 +6,8 @@ import { MigrationGate } from '@/components/migration-gate';
 describe('MigrationGate', () => {
   test('shows a focused loading state while local data is validated', async () => {
     await render(<MigrationGate error={null} onRetry={() => {}} onExport={() => {}} />);
-    expect(screen.getByText('Preparing FocusFlow')).toBeTruthy();
-    expect(screen.getByLabelText('Preparing FocusFlow workspace')).toBeTruthy();
+    expect(screen.getByText('Preparing DIR')).toBeTruthy();
+    expect(screen.getByLabelText('Preparing DIR workspace')).toBeTruthy();
     expect(screen.queryByText('Retry migration')).toBeNull();
   });
 

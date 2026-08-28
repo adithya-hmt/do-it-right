@@ -6,6 +6,7 @@ node_modules/
 # Expo
 .expo/
 dist/
+dist-android/
 web-build/
 expo-env.d.ts
 
@@ -41,3 +42,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# local build and Supabase runtime artifacts
+/builds/
+/supabase/.temp/
+/supabase/.branches/

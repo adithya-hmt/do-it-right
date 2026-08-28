@@ -6,16 +6,19 @@ describe('theme tokens', () => {
   test('keeps contrast surfaces dark when dark mode inverts reading colors', () => {
     applyTheme('dark');
 
-    expect(COLORS.ink).toBe('#F9F7F2');
-    expect(COLORS.contrast).toBe('#251E38');
-    expect(COLORS.contrastText).toBe('#FFFFFF');
+    expect(COLORS.ink).toBe('#FFF9EF');
+    expect(COLORS.contrast).toBe('#24211D');
+    expect(COLORS.contrastText).toBe('#FFF9EF');
   });
 
-  test('restores the violet light palette', () => {
+  test('restores the warm light palette and accepts a custom accent', () => {
     applyTheme('light');
 
-    expect(COLORS.canvas).toBe('#F8F6F1');
-    expect(COLORS.primary).toBe('#7057FF');
-    expect(COLORS.contrast).toBe('#251E38');
+    expect(COLORS.canvas).toBe('#F7F2E8');
+    expect(COLORS.primary).toBe('#C44F2B');
+    expect(COLORS.contrast).toBe('#24211D');
+
+    applyTheme('light', '#1976D2');
+    expect(COLORS.primary).toBe('#1976D2');
   });
 });

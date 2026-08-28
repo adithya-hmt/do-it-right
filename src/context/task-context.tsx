@@ -1,54 +1,58 @@
 import React from 'react';
 import { useColorScheme } from 'react-native';
+import type { Session } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 
 import { buildSeedWorkspace, deriveProjectProgress, getDayKey } from '@/domain/workspace';
 import type {
   DayPlan,
   FocusSession,
   LifeArea,
-  Profile,
-  Project,
+  ProfileV3,
+  ProjectV3,
   Routine,
-  SyncOperation,
-  Task,
+  Space,
+  SpaceMember,
+  SyncMutation,
+  TaskComment,
+  TaskV3,
   TaskCategory,
   TaskPriority,
   TaskStatus,
   WeeklyReview,
-  WorkspaceSnapshot,
+  WorkspaceNotification,
+  WorkspaceV3,
 } from '@/domain/types';
-import { exportLegacyWorkspace, loadWorkspace, saveWorkspace } from '@/lib/workspace-store';
+import { exportLegacyWorkspace, loadWorkspace } from '@/lib/workspace-store';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { applyTheme } from '@/constants/theme';
 import { exportLegacyJson, exportWorkspace } from '@/platform/data-export';
 import { MigrationGate } from '@/components/migration-gate';
+import { migrateWorkspaceV2ToV3 } from '@/domain/workspace-v3-migration';
+import { createWorkspaceV3Repository, type WorkspaceV3Repository } from '@/lib/workspace-v3-repository';
+import { workspaceV3Storage } from '@/lib/workspace-v3-storage';
+import { claimGuestWorkspace, getAuthNamespace } from '@/domain/auth';
+import { createAuthService } from '@/lib/auth-service';
+import { addTaskComment, createSharedSpace } from '@/domain/collaboration-commands';
+import { synchronizeDirWorkspace } from '@/lib/dir-workspace-sync';
 
 export type {
   DayPlan,
   FocusSession,
   LifeArea,
-  Profile,
-  Project,
+  ProfileV3 as Profile,
+  ProjectV3 as Project,
   Routine,
-  Task,
+  TaskV3 as Task,
   TaskCategory,
   TaskPriority,
   TaskStatus,
   WeeklyReview,
-  WorkspaceSnapshot,
+  WorkspaceV3 as WorkspaceSnapshot,
 } from '@/domain/types';
 
 export type SyncStatus = 'loading' | 'synced' | 'demo' | 'setup' | 'error';
-
-type RemoteTask = {
-  id: string;
-  name: string;
-  project: string;
-  category: TaskCategory;
-  due: string;
-  priority: TaskPriority;
-  completed: boolean;
-};
 
 type NewTaskInput = {
   title: string;
@@ -63,23 +67,35 @@ type NewTaskInput = {
   reminderAt?: string | null;
   priority?: TaskPriority;
   estimateMinutes?: number;
+  spaceId?: string | null;
+  assigneeId?: string | null;
 };
 
-type TaskPatch = Partial<Pick<Task, 'title' | 'notes' | 'projectId' | 'project' | 'category' | 'due' | 'dueAt' | 'plannedDate' | 'dueDate' | 'dueTime' | 'reminderAt' | 'priority' | 'estimateMinutes' | 'status'>>;
+type TaskPatch = Partial<Pick<TaskV3, 'title' | 'notes' | 'projectId' | 'project' | 'category' | 'due' | 'dueAt' | 'plannedDate' | 'dueDate' | 'dueTime' | 'reminderAt' | 'priority' | 'estimateMinutes' | 'status' | 'spaceId' | 'assigneeId'>>;
 
 type TaskContextValue = {
-  tasks: Task[];
-  projects: Project[];
+  tasks: TaskV3[];
+  projects: ProjectV3[];
   areas: LifeArea[];
-  profile: Profile;
+  profile: ProfileV3;
   todayPlan: DayPlan;
   routines: Routine[];
-  routineCompletions: WorkspaceSnapshot['routineCompletions'];
+  routineCompletions: WorkspaceV3['routineCompletions'];
   focusSessions: FocusSession[];
   weeklyReviews: Record<string, WeeklyReview>;
   syncStatus: SyncStatus;
   syncMessage: string | null;
   inboxCount: number;
+  spaces: Space[];
+  memberships: SpaceMember[];
+  comments: TaskComment[];
+  activity: WorkspaceV3['activity'];
+  notifications: WorkspaceNotification[];
+  session: Session | null;
+  createSpace: (input: { name: string; description?: string; color?: string }) => string;
+  addComment: (taskId: string, body: string) => void;
+  markNotificationRead: (id: string) => void;
+  inviteMember: (spaceId: string, email: string, role?: 'admin' | 'member') => Promise<{ error: string | null }>;
   toggleTask: (id: string) => void;
   addTask: (task: NewTaskInput) => void;
   updateTask: (id: string, patch: TaskPatch) => void;
@@ -91,17 +107,22 @@ type TaskContextValue = {
   startFocus: (taskId?: string | null, projectId?: string | null) => string;
   finishFocus: (id: string, interrupted?: boolean) => void;
   saveWeeklyReview: (review: WeeklyReview) => void;
-  updateProfile: (patch: Partial<Profile>) => void;
+  updateProfile: (patch: Partial<ProfileV3>) => void;
   finishOnboarding: () => void;
   linkEmail: (email: string) => Promise<{ error: string | null }>;
   exportData: () => Promise<boolean>;
-  addProject: (input: { name: string; outcome: string; areaId: string }) => void;
-  updateProject: (id: string, patch: Partial<Project>) => void;
+  addProject: (input: { name: string; outcome: string; areaId: string; spaceId?: string | null }) => void;
+  updateProject: (id: string, patch: Partial<ProjectV3>) => void;
+  signOut: () => Promise<{ error: string | null }>;
+  deleteAccount: () => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
+  completeAuthUrl: (url: string) => Promise<{ error: string | null }>;
+  acceptInvitation: (invitationId: string, token: string) => Promise<{ spaceId: string | null; error: string | null }>;
   syncNow: () => void;
 };
 
 const TaskContext = React.createContext<TaskContextValue | null>(null);
-const REMOTE_FIELDS = 'id,name,project,category,due,priority,completed';
+const authService = supabase ? createAuthService(supabase) : null;
 
 function nowIso() {
   return new Date().toISOString();
@@ -121,191 +142,139 @@ function createId(prefix: string) {
   return uuid ?? `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function toRemoteTask(task: Task) {
-  return { name: task.title, project: task.project || 'Inbox', category: task.category, due: task.due || 'Anytime', priority: task.priority, completed: task.completed };
-}
-
 function getFriendlyError(error: unknown) {
   const typedError = error as { code?: string; message?: string };
   const code = typedError.code ?? '';
   const message = typedError.message ?? '';
   const lowerMessage = message.toLowerCase();
-  if (code === 'PGRST205' || lowerMessage.includes("could not find the table 'public.todos'")) return 'Run supabase/todos.sql in the Supabase SQL Editor to enable cloud sync.';
-  if (code === 'anonymous_provider_disabled' || lowerMessage.includes('anonymous')) return 'Enable Anonymous Sign-Ins in Supabase Authentication → Providers.';
+  if (code === 'PGRST205' || lowerMessage.includes("could not find the table 'public.dir_")) return 'Apply the DIR collaboration migration in Supabase to enable cloud sync.';
   if (lowerMessage.includes('invalid api key') || lowerMessage.includes('failed to fetch')) return 'Check the EXPO_PUBLIC_SUPABASE_URL and publishable key in .env.local.';
   return 'Cloud sync is unavailable right now. Your workspace is still available locally.';
 }
 
-function normalizeWorkspace(saved: WorkspaceSnapshot | null, day: string) {
-  const seed = buildSeedWorkspace(day);
+function normalizeWorkspace(saved: WorkspaceV3 | null, day: string) {
+  const seed = migrateWorkspaceV2ToV3(buildSeedWorkspace(day));
   if (!saved) return seed;
-  const projects = saved.projects.map((project) => {
-    const accent = {
-      '#8DBE2F': { color: '#7357E8', softColor: '#EEEAFE' },
-      '#D96D51': { color: '#E67870', softColor: '#FBE9E7' },
-      '#56614F': { color: '#C08A36', softColor: '#FBF0D7' },
-      '#4E7A43': { color: '#2E7A60', softColor: '#DFF3EA' },
-    }[project.color];
-    return accent ? { ...project, ...accent } : project;
-  });
-  const areas = saved.areas.map((area) => {
-    const color = { '#8DBE2F': '#7357E8', '#4E7A43': '#2E7A60', '#D96D51': '#E67870' }[area.color] ?? area.color;
-    return color === area.color ? area : { ...area, color };
-  });
-  return {
-    ...seed,
-    ...saved,
-    profile: { ...seed.profile, ...saved.profile, avatarColor: saved.profile.avatarColor === '#B6EE4A' ? '#7357E8' : saved.profile.avatarColor, focusIntent: saved.profile.focusIntent ?? seed.profile.focusIntent },
-    areas,
-    projects,
-    tasks: saved.tasks,
-    dayPlans: saved.dayPlans,
-    routines: saved.routines ?? seed.routines,
-    routineCompletions: saved.routineCompletions ?? [],
-    focusSessions: saved.focusSessions ?? [],
-    weeklyReviews: saved.weeklyReviews ?? {},
-    syncQueue: saved.syncQueue ?? [],
-  } satisfies WorkspaceSnapshot;
+  return { ...seed, ...saved, profile: { ...seed.profile, ...saved.profile, appearance: saved.profile.appearance ?? seed.profile.appearance } } satisfies WorkspaceV3;
 }
 
-function queueTaskOperation(queue: SyncOperation[], task: Task, operation: SyncOperation['operation'] = 'upsert') {
-  const next: SyncOperation = { id: `op-${task.id}`, entity: 'task', entityId: task.id, operation, payload: task, createdAt: nowIso(), attempts: 0, lastError: null };
+function queueTaskOperation(queue: SyncMutation[], task: TaskV3, operation: SyncMutation['operation'] = 'upsert') {
+  const next: SyncMutation = { id: `op-${task.id}`, entity: 'task', entityId: task.id, operation, payload: task, baseRevision: task.revision, createdAt: nowIso(), attempts: 0, lastError: null };
   return [...queue.filter((item) => !(item.entity === 'task' && item.entityId === task.id)), next];
 }
 
-function mapRemoteTask(remote: RemoteTask, previous: Task | undefined, day: string, position = 0): Task {
-  return {
-    id: remote.id,
-    title: remote.name,
-    notes: previous?.notes ?? '',
-    projectId: previous?.projectId ?? null,
-    project: remote.project || previous?.project || 'Inbox',
-    category: remote.category,
-    status: remote.completed ? 'completed' : previous?.status === 'inbox' ? 'inbox' : 'planned',
-    due: remote.due || 'Anytime',
-    dueAt: previous?.dueAt ?? null,
-    plannedDate: previous?.plannedDate ?? day,
-    dueDate: previous?.dueDate ?? previous?.plannedDate ?? day,
-    dueTime: previous?.dueTime ?? null,
-    reminderAt: previous?.reminderAt ?? null,
-    position: previous?.position ?? position,
-    priority: remote.priority,
-    estimateMinutes: previous?.estimateMinutes ?? 25,
-    completed: remote.completed,
-    completedAt: remote.completed ? previous?.completedAt ?? nowIso() : null,
-    syncState: 'clean',
-    createdAt: previous?.createdAt ?? nowIso(),
-    updatedAt: nowIso(),
-  };
+function queueEntityOperation(queue: SyncMutation[], entity: SyncMutation['entity'], entityId: string, payload: unknown, baseRevision = 0) {
+  const next: SyncMutation = { id: `op-${entity}-${entityId}`, entity, entityId, operation: 'upsert', payload, baseRevision, createdAt: nowIso(), attempts: 0, lastError: null };
+  return [...queue.filter((item) => !(item.entity === entity && item.entityId === entityId)), next];
 }
 
 export function TaskProvider({ children }: React.PropsWithChildren) {
   const today = getDayKey(new Date());
   const systemColorScheme = useColorScheme();
-  const [workspace, setWorkspace] = React.useState<WorkspaceSnapshot>(() => buildSeedWorkspace(today));
+  const [workspace, setWorkspace] = React.useState<WorkspaceV3>(() => migrateWorkspaceV2ToV3(buildSeedWorkspace(today)));
+  const [session, setSession] = React.useState<Session | null>(null);
   const [hydrated, setHydrated] = React.useState(false);
   const [migrationError, setMigrationError] = React.useState<string | null>(null);
   const [migrationAttempt, setMigrationAttempt] = React.useState(0);
   const [syncStatus, setSyncStatus] = React.useState<SyncStatus>(isSupabaseConfigured ? 'loading' : 'demo');
   const [syncMessage, setSyncMessage] = React.useState<string | null>(isSupabaseConfigured ? null : 'Your workspace is saved on this device. Add Supabase variables for cloud sync.');
   const workspaceRef = React.useRef(workspace);
+  const repositoryRef = React.useRef<WorkspaceV3Repository | null>(null);
   const syncInFlight = React.useRef(false);
 
   // Theme tokens are shared by the small native UI surface. Resolve them before
   // rendering children so a preference change is visible in the same render.
-  applyTheme(workspace.profile.theme === 'system' ? (systemColorScheme === 'dark' ? 'dark' : 'light') : workspace.profile.theme);
+  const accent = workspace.profile.appearance.customAccent ?? ({ warm: '#C44F2B', forest: '#3F7352', ocean: '#1976D2', berry: '#9C3F67', gold: '#8A6416', custom: '#C44F2B' }[workspace.profile.appearance.paletteId]);
+  applyTheme(workspace.profile.appearance.mode === 'system' ? (systemColorScheme === 'dark' ? 'dark' : 'light') : workspace.profile.appearance.mode, accent);
 
-  const replaceWorkspace = React.useCallback((next: WorkspaceSnapshot) => {
+  const replaceWorkspace = React.useCallback((next: WorkspaceV3) => {
     workspaceRef.current = next;
     setWorkspace(next);
-    void saveWorkspace(next);
+    void repositoryRef.current?.save(next);
   }, []);
 
-  const commit = React.useCallback((updater: (current: WorkspaceSnapshot) => WorkspaceSnapshot) => {
+  const commit = React.useCallback((updater: (current: WorkspaceV3) => WorkspaceV3) => {
     setWorkspace((current) => {
       const next = updater(current);
       workspaceRef.current = next;
-      void saveWorkspace(next);
+      void repositoryRef.current?.save(next);
       return next;
     });
   }, []);
 
   const ensureSession = React.useCallback(async () => {
     if (!supabase) return null;
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) throw sessionError;
-    if (sessionData.session) return sessionData.session;
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error || !data.session) throw error ?? new Error('Anonymous session was not created.');
-    return data.session;
+    return authService?.getSession() ?? null;
   }, []);
 
-  const hydrateRemote = React.useCallback(async (local: WorkspaceSnapshot) => {
+  const hydrateRemote = React.useCallback(async (local: WorkspaceV3) => {
     if (!supabase) return;
     try {
       const session = await ensureSession();
       if (!session) return;
-      const { data, error } = await supabase.from('todos').select(REMOTE_FIELDS).eq('user_id', session.user.id).order('created_at', { ascending: true });
-      if (error) throw error;
-      if (data?.length) {
-        const remoteTasks = data.map((item, index) => mapRemoteTask(item as unknown as RemoteTask, local.tasks.find((task) => task.id === item.id), today, index));
-        replaceWorkspace({ ...local, tasks: remoteTasks, syncQueue: [] });
-        setSyncStatus('synced');
-        setSyncMessage(null);
-        return;
-      }
-      const { data: seeded, error: seedError } = await supabase.from('todos').insert(local.tasks.map(toRemoteTask)).select(REMOTE_FIELDS);
-      if (seedError) throw seedError;
-      const syncedTasks = seeded?.length ? seeded.map((item, index) => mapRemoteTask(item as unknown as RemoteTask, local.tasks.find((task) => task.title === item.name), today, index)) : local.tasks;
-      replaceWorkspace({ ...local, tasks: syncedTasks, syncQueue: [] });
+      const synced = await synchronizeDirWorkspace(supabase, local, session.user.id);
+      replaceWorkspace(synced);
       setSyncStatus('synced');
       setSyncMessage(null);
     } catch (error) {
       setSyncStatus((error as { code?: string }).code === 'PGRST205' ? 'setup' : 'error');
       setSyncMessage(getFriendlyError(error));
     }
-  }, [ensureSession, replaceWorkspace, today]);
+  }, [ensureSession, replaceWorkspace]);
 
   React.useEffect(() => {
     let active = true;
-    void loadWorkspace().then((saved) => {
-      if (!active) return;
-      const local = normalizeWorkspace(saved, today);
-      replaceWorkspace(local);
-      setHydrated(true);
-      if (isSupabaseConfigured) void hydrateRemote(local);
-    }).catch((error: unknown) => {
-      if (!active) return;
+    const hydrate = async (nextSession: Session | null) => {
       setHydrated(false);
-      setMigrationError(error instanceof Error ? error.message : 'Your legacy workspace could not be migrated.');
+      setSession(nextSession);
+      const namespace = getAuthNamespace(nextSession?.user.id);
+      const repository = createWorkspaceV3Repository(workspaceV3Storage, {
+        namespace,
+        loadV2: namespace === 'guest' ? loadWorkspace : async () => null,
+      });
+      let loaded = await repository.load();
+      if (!loaded && nextSession) {
+        const guestRepository = createWorkspaceV3Repository(workspaceV3Storage, { namespace: 'guest', loadV2: loadWorkspace });
+        const guest = normalizeWorkspace(await guestRepository.load(), today);
+        loaded = claimGuestWorkspace(guest, nextSession.user.id);
+        loaded = { ...loaded, profile: { ...loaded.profile, email: nextSession.user.email ?? null } };
+        await repository.save(loaded);
+      }
+      if (!active) return;
+      repositoryRef.current = repository;
+      const local = normalizeWorkspace(loaded, today);
+      workspaceRef.current = local;
+      setWorkspace(local);
+      setHydrated(true);
+      setMigrationError(null);
+      if (nextSession && isSupabaseConfigured) void hydrateRemote(local);
+    };
+    void (async () => {
+      try {
+        await hydrate(await authService?.getSession() ?? null);
+      } catch (error) {
+        if (!active) return;
+        setMigrationError(error instanceof Error ? error.message : 'Your legacy workspace could not be migrated.');
+      }
+    })();
+    const unsubscribe = authService?.observeSession((nextSession) => {
+      void hydrate(nextSession).catch((error) => setMigrationError(error instanceof Error ? error.message : 'DIR could not switch accounts.'));
     });
     return () => {
       active = false;
+      unsubscribe?.();
     };
-  }, [hydrateRemote, migrationAttempt, replaceWorkspace, today]);
+  }, [hydrateRemote, migrationAttempt, today]);
 
   const syncNow = React.useCallback(async () => {
     if (!supabase || !hydrated || syncInFlight.current) return;
-    const queued = workspaceRef.current.syncQueue.filter((operation) => operation.entity === 'task');
-    if (!queued.length) {
-      setSyncStatus('synced');
-      return;
-    }
     syncInFlight.current = true;
     setSyncStatus('loading');
     try {
-      await ensureSession();
-      for (const operation of queued) {
-        const task = workspaceRef.current.tasks.find((item) => item.id === operation.entityId);
-        if (!task) continue;
-        const isRemoteId = !task.id.startsWith('local-') && !task.id.startsWith('task-');
-        const result = isRemoteId
-          ? await supabase.from('todos').update(toRemoteTask(task)).eq('id', task.id).select(REMOTE_FIELDS).single()
-          : await supabase.from('todos').insert(toRemoteTask(task)).select(REMOTE_FIELDS).single();
-        if (result.error) throw result.error;
-        const synced = mapRemoteTask(result.data as unknown as RemoteTask, task, today);
-        commit((current) => ({ ...current, tasks: current.tasks.map((item) => item.id === task.id ? synced : item), syncQueue: current.syncQueue.filter((item) => item.id !== operation.id) }));
-      }
+      const currentSession = await ensureSession();
+      if (!currentSession) return;
+      const synced = await synchronizeDirWorkspace(supabase, workspaceRef.current, currentSession.user.id);
+      replaceWorkspace(synced);
       setSyncStatus('synced');
       setSyncMessage(null);
     } catch (error) {
@@ -316,13 +285,25 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     } finally {
       syncInFlight.current = false;
     }
-  }, [commit, ensureSession, hydrated, today]);
+  }, [commit, ensureSession, hydrated, replaceWorkspace]);
 
   React.useEffect(() => {
     if (!hydrated || !workspace.syncQueue.length || syncStatus === 'loading') return;
     const timer = setTimeout(() => void syncNow(), syncStatus === 'error' ? 5000 : 0);
     return () => clearTimeout(timer);
   }, [hydrated, syncNow, syncStatus, workspace.syncQueue.length]);
+
+  React.useEffect(() => {
+    if (!supabase || !session || !hydrated) return;
+    const client = supabase;
+    const ownMutationPrefix = `sync-${session.user.id}-`;
+    const channel = client.channel(`dir-tasks-${session.user.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'dir_tasks' }, (payload) => {
+      const row = payload.new as { client_mutation_id?: string };
+      if (row.client_mutation_id?.startsWith(ownMutationPrefix)) return;
+      void syncNow();
+    }).subscribe();
+    return () => { void client.removeChannel(channel); };
+  }, [hydrated, session, syncNow]);
 
   const tasks = workspace.tasks;
   const projects = React.useMemo(() => workspace.projects.map((project) => {
@@ -344,18 +325,19 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
   const addTask = React.useCallback((input: NewTaskInput) => {
     const project = projects.find((item) => item.id === input.projectId) ?? projects.find((item) => item.name === input.project);
     const dueDate = input.dueDate ?? (input.plannedDate === undefined ? today : input.plannedDate);
-    const task: Task = { id: `local-${Date.now()}`, title: input.title.trim(), notes: input.notes ?? '', projectId: project?.id ?? input.projectId ?? null, project: project?.name ?? input.project ?? 'Inbox', category: input.category ?? 'Work', status: dueDate === null && !project ? 'inbox' : 'planned', due: input.due && input.due !== input.dueTime ? input.due : formatTimeLabel(input.dueTime), dueAt: null, plannedDate: dueDate, dueDate, dueTime: input.dueTime ?? null, reminderAt: input.reminderAt ?? null, position: workspace.tasks.length, priority: input.priority ?? 'medium', estimateMinutes: input.estimateMinutes ?? 25, completed: false, completedAt: null, syncState: supabase ? 'pending' : 'clean', createdAt: nowIso(), updatedAt: nowIso() };
-    commit((current) => ({ ...current, tasks: [...current.tasks, task], syncQueue: supabase ? queueTaskOperation(current.syncQueue, task) : current.syncQueue }));
-  }, [commit, projects, today, workspace.tasks.length]);
+    const timestamp = nowIso();
+    const task: TaskV3 = { id: `local-${Date.now()}`, title: input.title.trim(), notes: input.notes ?? '', projectId: project?.id ?? input.projectId ?? null, project: project?.name ?? input.project ?? 'Inbox', category: input.category ?? 'Work', status: dueDate === null && !project ? 'inbox' : 'planned', due: input.due && input.due !== input.dueTime ? input.due : formatTimeLabel(input.dueTime), dueAt: null, plannedDate: dueDate, dueDate, dueTime: input.dueTime ?? null, reminderAt: input.reminderAt ?? null, position: workspace.tasks.length, priority: input.priority ?? 'medium', estimateMinutes: input.estimateMinutes ?? 25, completed: false, completedAt: null, syncState: session ? 'pending' : 'clean', createdAt: timestamp, updatedAt: timestamp, spaceId: input.spaceId ?? project?.spaceId ?? null, createdBy: session?.user.id ?? workspace.profile.id, assigneeId: input.assigneeId ?? null, revision: 0, deletedAt: null };
+    commit((current) => ({ ...current, tasks: [...current.tasks, task], syncQueue: session ? queueTaskOperation(current.syncQueue, task) : current.syncQueue }));
+  }, [commit, projects, session, today, workspace.profile.id, workspace.tasks.length]);
 
   const updateTask = React.useCallback((id: string, patch: TaskPatch) => {
     commit((current) => {
       const existing = current.tasks.find((task) => task.id === id);
       if (!existing) return current;
-      const updated = { ...existing, ...patch, completed: patch.status ? patch.status === 'completed' : existing.completed, updatedAt: nowIso(), syncState: supabase ? 'pending' as const : existing.syncState };
-      return { ...current, tasks: current.tasks.map((task) => task.id === id ? updated : task), syncQueue: supabase ? queueTaskOperation(current.syncQueue, updated) : current.syncQueue };
+      const updated = { ...existing, ...patch, completed: patch.status ? patch.status === 'completed' : existing.completed, updatedAt: nowIso(), revision: existing.revision + 1, syncState: session ? 'pending' as const : existing.syncState };
+      return { ...current, tasks: current.tasks.map((task) => task.id === id ? updated : task), syncQueue: session ? queueTaskOperation(current.syncQueue, updated) : current.syncQueue };
     });
-  }, [commit]);
+  }, [commit, session]);
 
   const setTaskStatus = React.useCallback((id: string, status: TaskStatus) => updateTask(id, { status }), [updateTask]);
 
@@ -391,36 +373,137 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     commit((current) => ({ ...current, weeklyReviews: { ...current.weeklyReviews, [review.weekStart]: review } }));
   }, [commit]);
 
-  const updateProfile = React.useCallback((patch: Partial<Profile>) => {
-    commit((current) => ({ ...current, profile: { ...current.profile, ...patch } }));
-  }, [commit]);
+  const updateProfile = React.useCallback((patch: Partial<ProfileV3>) => {
+    commit((current) => {
+      const profile = { ...current.profile, ...patch };
+      return { ...current, profile, syncQueue: session ? queueEntityOperation(current.syncQueue, 'profile', profile.id, profile) : current.syncQueue };
+    });
+  }, [commit, session]);
 
   const finishOnboarding = React.useCallback(() => updateProfile({ onboardingComplete: true }), [updateProfile]);
 
   const linkEmail = React.useCallback(async (email: string) => {
     if (!supabase) return { error: 'Add Supabase variables in .env.local before linking an account.' };
     try {
-      await ensureSession();
-      const { error } = await supabase.auth.updateUser({ email: email.trim() });
-      if (error) throw error;
-      updateProfile({ email: email.trim() });
+      await authService?.signInWithEmailOtp(email.trim(), Linking.createURL('auth/callback'));
       return { error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'We could not start account linking.';
       return { error: message };
     }
-  }, [ensureSession, updateProfile]);
+  }, []);
+
+  const signOut = React.useCallback(async () => {
+    if (!authService) return { error: null };
+    try {
+      await authService.signOut();
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not sign out.' };
+    }
+  }, []);
+
+  const deleteAccount = React.useCallback(async () => {
+    if (!authService) return { error: 'Cloud accounts are not configured.' };
+    try {
+      await authService.deleteAccount();
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not delete this account.' };
+    }
+  }, []);
+
+  const signInWithGoogle = React.useCallback(async () => {
+    if (!authService) return { error: 'Add Supabase variables before signing in.' };
+    try {
+      const redirectTo = Linking.createURL('auth/callback');
+      await authService.signInWithGoogle(redirectTo, async (url, callback) => {
+        const result = await WebBrowser.openAuthSessionAsync(url, callback);
+        return result.type === 'success' ? result.url : null;
+      });
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Google sign-in did not finish.' };
+    }
+  }, []);
+
+  const completeAuthUrl = React.useCallback(async (url: string) => {
+    if (!authService) return { error: 'Cloud accounts are not configured.' };
+    try {
+      await authService.completeAuthUrl(url);
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not complete sign-in.' };
+    }
+  }, []);
+
+  const acceptInvitation = React.useCallback(async (invitationId: string, token: string) => {
+    if (!supabase || !session) return { spaceId: null, error: 'Sign in with the invited email first.' };
+    try {
+      const { data, error } = await supabase.functions.invoke<{ spaceId: string }>('accept-invitation', { body: { invitationId, token } });
+      if (error) throw error;
+      return { spaceId: data?.spaceId ?? null, error: null };
+    } catch (error) {
+      return { spaceId: null, error: error instanceof Error ? error.message : 'DIR could not accept this invitation.' };
+    }
+  }, [session]);
 
   const exportData = React.useCallback(() => exportWorkspace(workspaceRef.current), []);
 
-  const addProject = React.useCallback((input: { name: string; outcome: string; areaId: string }) => {
-    const project: Project = { id: createId('project'), name: input.name.trim(), eyebrow: 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: input.areaId, status: 'active', targetDate: null, color: '#7357E8', softColor: '#EEEAFE', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0 };
-    commit((current) => ({ ...current, projects: [...current.projects, project] }));
-  }, [commit, workspace.projects.length]);
+  const addProject = React.useCallback((input: { name: string; outcome: string; areaId: string; spaceId?: string | null }) => {
+    const spaceId = input.spaceId ?? null;
+    const project: ProjectV3 = { id: createId('project'), name: input.name.trim(), eyebrow: spaceId ? 'SHARED / ACTIVE' : 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: spaceId ? '' : input.areaId, status: 'active', targetDate: null, color: '#C44F2B', softColor: '#F9E5DC', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0, spaceId, createdBy: session?.user.id ?? workspace.profile.id, revision: 0, deletedAt: null };
+    commit((current) => ({ ...current, projects: [...current.projects, project], syncQueue: session ? queueEntityOperation(current.syncQueue, 'project', project.id, project) : current.syncQueue }));
+  }, [commit, session, workspace.profile.id, workspace.projects.length]);
 
-  const updateProject = React.useCallback((id: string, patch: Partial<Project>) => {
-    commit((current) => ({ ...current, projects: current.projects.map((project) => project.id === id ? { ...project, ...patch } : project) }));
-  }, [commit]);
+  const updateProject = React.useCallback((id: string, patch: Partial<ProjectV3>) => {
+    commit((current) => {
+      const project = current.projects.find((item) => item.id === id);
+      if (!project) return current;
+      const updated = { ...project, ...patch, revision: project.revision + 1 };
+      return { ...current, projects: current.projects.map((item) => item.id === id ? updated : item), syncQueue: session ? queueEntityOperation(current.syncQueue, 'project', id, updated, project.revision) : current.syncQueue };
+    });
+  }, [commit, session]);
+
+  const createSpace = React.useCallback((input: { name: string; description?: string; color?: string }) => {
+    const id = createId('space');
+    const timestamp = nowIso();
+    const userId = session?.user.id ?? workspace.profile.id;
+    commit((current) => {
+      const next = createSharedSpace(current, { id, memberId: createId('member'), userId, name: input.name, description: input.description, color: input.color, now: timestamp });
+      const space = next.spaces.find((item) => item.id === id)!;
+      const member = next.memberships.find((item) => item.spaceId === id && item.userId === userId)!;
+      const queue = session ? queueEntityOperation(queueEntityOperation(current.syncQueue, 'space', id, space), 'membership', member.id, member) : current.syncQueue;
+      return { ...next, syncQueue: queue };
+    });
+    return id;
+  }, [commit, session, workspace.profile]);
+
+  const addComment = React.useCallback((taskId: string, body: string) => {
+    const task = workspaceRef.current.tasks.find((item) => item.id === taskId);
+    if (!task?.spaceId || !body.trim()) return;
+    commit((current) => {
+      const next = addTaskComment(current, { id: createId('comment'), taskId, authorId: session?.user.id ?? workspaceRef.current.profile.id, body, now: nowIso() });
+      const added = next.comments[next.comments.length - 1];
+      return { ...next, syncQueue: session ? queueEntityOperation(current.syncQueue, 'comment', added.id, added) : current.syncQueue };
+    });
+  }, [commit, session]);
+
+  const markNotificationRead = React.useCallback((id: string) => {
+    commit((current) => ({ ...current, notifications: current.notifications.map((notification) => notification.id === id ? { ...notification, readAt: nowIso() } : notification) }));
+    if (supabase && session) void supabase.from('dir_notifications').update({ read_at: nowIso() }).eq('id', id);
+  }, [commit, session]);
+
+  const inviteMember = React.useCallback(async (spaceId: string, email: string, role: 'admin' | 'member' = 'member') => {
+    if (!supabase || !session) return { error: 'Sign in before inviting someone.' };
+    try {
+      const { error } = await supabase.functions.invoke('invite-member', { body: { spaceId, email: email.trim().toLocaleLowerCase(), role } });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not send the invitation.' };
+    }
+  }, [session]);
 
   const value = React.useMemo<TaskContextValue>(() => ({
     tasks,
@@ -434,6 +517,12 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     weeklyReviews: workspace.weeklyReviews,
     syncStatus,
     syncMessage,
+    spaces: workspace.spaces,
+    memberships: workspace.memberships,
+    comments: workspace.comments,
+    activity: workspace.activity,
+    notifications: workspace.notifications,
+    session,
     inboxCount: tasks.filter((task) => task.status === 'inbox' && !task.completed).length,
     toggleTask,
     addTask,
@@ -452,8 +541,17 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     exportData,
     addProject,
     updateProject,
+    createSpace,
+    addComment,
+    markNotificationRead,
+    inviteMember,
+    signOut,
+    deleteAccount,
+    signInWithGoogle,
+    completeAuthUrl,
+    acceptInvitation,
     syncNow: () => void syncNow(),
-  }), [addProject, addTask, completeRoutine, exportData, finishFocus, finishOnboarding, isRoutineComplete, linkEmail, projects, saveWeeklyReview, setDailyThree, setIntention, setTaskStatus, startFocus, syncMessage, syncNow, syncStatus, tasks, todayPlan, toggleTask, updateProfile, updateProject, updateTask, workspace.areas, workspace.focusSessions, workspace.profile, workspace.routineCompletions, workspace.routines, workspace.weeklyReviews]);
+  }), [acceptInvitation, addComment, addProject, addTask, completeAuthUrl, completeRoutine, createSpace, deleteAccount, exportData, finishFocus, finishOnboarding, inviteMember, isRoutineComplete, linkEmail, markNotificationRead, projects, saveWeeklyReview, session, setDailyThree, setIntention, setTaskStatus, signInWithGoogle, signOut, startFocus, syncMessage, syncNow, syncStatus, tasks, todayPlan, toggleTask, updateProfile, updateProject, updateTask, workspace.activity, workspace.areas, workspace.comments, workspace.focusSessions, workspace.memberships, workspace.notifications, workspace.profile, workspace.routineCompletions, workspace.routines, workspace.spaces, workspace.weeklyReviews]);
 
   if (!hydrated) return <MigrationGate error={migrationError} onRetry={() => { setMigrationError(null); setMigrationAttempt((attempt) => attempt + 1); }} onExport={() => { void exportLegacyWorkspace().then((raw) => raw ? exportLegacyJson(raw) : false); }} />;
 
