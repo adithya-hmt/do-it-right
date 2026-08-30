@@ -35,6 +35,7 @@ import { claimGuestWorkspace, getAuthNamespace } from '@/domain/auth';
 import { createAuthService, formatAuthError } from '@/lib/auth-service';
 import { addTaskComment, createSharedSpace } from '@/domain/collaboration-commands';
 import { synchronizeDirWorkspace } from '@/lib/dir-workspace-sync';
+import { repairLegacyWorkspaceIds } from '@/domain/legacy-id-repair';
 import { getSupabaseAuthSettings } from '@/lib/supabase-auth-settings';
 import { getAuthRedirectUrl } from '@/lib/auth-redirect';
 
@@ -153,6 +154,24 @@ function getFriendlyError(error: unknown) {
   return 'Cloud sync is unavailable right now. Your workspace is still available locally.';
 }
 
+function isIdentityCollision(error: unknown) {
+  const typedError = error as { code?: string; message?: string };
+  const message = (typedError.message ?? '').toLowerCase();
+  return typedError.code === '42501' && message.includes('row-level security');
+}
+
+async function synchronizeWithRecovery(local: WorkspaceV3, userId: string) {
+  if (!supabase) throw new Error('Cloud accounts are not configured.');
+  try {
+    return await synchronizeDirWorkspace(supabase, local, userId);
+  } catch (error) {
+    if (!isIdentityCollision(error)) throw error;
+    const repaired = repairLegacyWorkspaceIds(local, userId);
+    if (!repaired.changed) throw error;
+    return synchronizeDirWorkspace(supabase, repaired.workspace, userId);
+  }
+}
+
 function normalizeWorkspace(saved: WorkspaceV3 | null, day: string) {
   const seed = migrateWorkspaceV2ToV3(buildSeedWorkspace(day));
   if (!saved) return seed;
@@ -212,8 +231,12 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     if (!supabase) return;
     try {
       const session = await ensureSession();
-      if (!session) return;
-      const synced = await synchronizeDirWorkspace(supabase, local, session.user.id);
+      if (!session) {
+        setSyncStatus('setup');
+        setSyncMessage('Sign in to sync your workspace across devices.');
+        return;
+      }
+      const synced = await synchronizeWithRecovery(local, session.user.id);
       replaceWorkspace(synced);
       setSyncStatus('synced');
       setSyncMessage(null);
@@ -273,8 +296,12 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     setSyncStatus('loading');
     try {
       const currentSession = await ensureSession();
-      if (!currentSession) return;
-      const synced = await synchronizeDirWorkspace(supabase, workspaceRef.current, currentSession.user.id);
+      if (!currentSession) {
+        setSyncStatus('setup');
+        setSyncMessage('Sign in to sync your workspace across devices.');
+        return;
+      }
+      const synced = await synchronizeWithRecovery(workspaceRef.current, currentSession.user.id);
       replaceWorkspace(synced);
       setSyncStatus('synced');
       setSyncMessage(null);
