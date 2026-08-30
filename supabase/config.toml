@@ -36,7 +36,7 @@ enable_anonymous_sign_ins = false
 
 [auth.external.google]
 enabled = true
-client_id = "902749259572-g4foi393qp11isv09cq7tomslkp6ot08.apps.googleusercontent.com"
+client_id = "902749259572-674t4kirktqhsfqj25ndhdkhcp9luutr.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
 skip_nonce_check = false
 
