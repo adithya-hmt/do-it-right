@@ -30,7 +30,7 @@ backend = "postgres"
 [auth]
 enabled = true
 site_url = "doitright://auth/callback"
-additional_redirect_urls = ["doitright://auth/callback", "doitright://invite"]
+additional_redirect_urls = ["http://localhost:8081/auth/callback", "doitright://auth/callback", "doitright://invite"]
 enable_signup = true
 enable_anonymous_sign_ins = false
 

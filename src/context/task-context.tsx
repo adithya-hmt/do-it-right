@@ -1,7 +1,6 @@
 import React from 'react';
 import { useColorScheme } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
 import { buildSeedWorkspace, deriveProjectProgress, getDayKey } from '@/domain/workspace';
@@ -37,6 +36,7 @@ import { createAuthService, formatAuthError } from '@/lib/auth-service';
 import { addTaskComment, createSharedSpace } from '@/domain/collaboration-commands';
 import { synchronizeDirWorkspace } from '@/lib/dir-workspace-sync';
 import { getSupabaseAuthSettings } from '@/lib/supabase-auth-settings';
+import { getAuthRedirectUrl } from '@/lib/auth-redirect';
 
 export type {
   DayPlan,
@@ -185,7 +185,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
 
   // Theme tokens are shared by the small native UI surface. Resolve them before
   // rendering children so a preference change is visible in the same render.
-  const accent = workspace.profile.appearance.customAccent ?? ({ warm: '#C44F2B', forest: '#3F7352', ocean: '#1976D2', berry: '#9C3F67', gold: '#8A6416', custom: '#C44F2B' }[workspace.profile.appearance.paletteId]);
+  const accent = workspace.profile.appearance.customAccent ?? ({ warm: '#E06A3D', forest: '#2E7D5B', ocean: '#3F82F6', berry: '#9C3F67', gold: '#D8B98C', custom: '#E06A3D' }[workspace.profile.appearance.paletteId]);
   applyTheme(workspace.profile.appearance.mode === 'system' ? (systemColorScheme === 'dark' ? 'dark' : 'light') : workspace.profile.appearance.mode, accent);
 
   const replaceWorkspace = React.useCallback((next: WorkspaceV3) => {
@@ -388,7 +388,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     try {
       const authSettings = await getSupabaseAuthSettings();
       if (authSettings && !authSettings.email) return { error: formatAuthError('Unsupported provider: email is not enabled', 'Email sign-in is unavailable.', 'email') };
-      await authService?.signInWithEmailOtp(email.trim(), Linking.createURL('auth/callback'));
+      await authService?.signInWithEmailOtp(email.trim(), getAuthRedirectUrl());
       return { error: null };
     } catch (error) {
       const message = formatAuthError(error, 'We could not start account linking.', 'email');
@@ -421,7 +421,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     try {
       const authSettings = await getSupabaseAuthSettings();
       if (authSettings && !authSettings.google) return { error: formatAuthError('Unsupported provider: google is not enabled', 'Google sign-in is unavailable.', 'google') };
-      const redirectTo = Linking.createURL('auth/callback');
+      const redirectTo = getAuthRedirectUrl();
       await authService.signInWithGoogle(redirectTo, async (url, callback) => {
         const result = await WebBrowser.openAuthSessionAsync(url, callback);
         return result.type === 'success' ? result.url : null;
@@ -457,7 +457,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
 
   const addProject = React.useCallback((input: { name: string; outcome: string; areaId: string; spaceId?: string | null }) => {
     const spaceId = input.spaceId ?? null;
-    const project: ProjectV3 = { id: createId('project'), name: input.name.trim(), eyebrow: spaceId ? 'SHARED / ACTIVE' : 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: spaceId ? '' : input.areaId, status: 'active', targetDate: null, color: '#C44F2B', softColor: '#F9E5DC', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0, spaceId, createdBy: session?.user.id ?? workspace.profile.id, revision: 0, deletedAt: null };
+    const project: ProjectV3 = { id: createId('project'), name: input.name.trim(), eyebrow: spaceId ? 'SHARED / ACTIVE' : 'PERSONAL / ACTIVE', outcome: input.outcome.trim(), summary: input.outcome.trim(), areaId: spaceId ? '' : input.areaId, status: 'active', targetDate: null, color: '#E06A3D', softColor: '#F8DED2', position: workspace.projects.length, progress: 0, tasksDone: 0, tasksTotal: 0, spaceId, createdBy: session?.user.id ?? workspace.profile.id, revision: 0, deletedAt: null };
     commit((current) => ({ ...current, projects: [...current.projects, project], syncQueue: session ? queueEntityOperation(current.syncQueue, 'project', project.id, project) : current.syncQueue }));
   }, [commit, session, workspace.profile.id, workspace.projects.length]);
 

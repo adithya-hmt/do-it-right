@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, RADIUS } from '@/constants/theme';
-import { BrandMark } from '@/components/ui/brand-mark';
+import { BrandLockup } from '@/components/ui/brand-lockup';
 import { Glyph, type GlyphName } from '@/components/ui/glyph';
 
 export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon, onAction }: { eyebrow: string; title: string; subtitle?: string; profileInitial?: string; actionIcon?: GlyphName; onAction?: () => void }) {
@@ -15,15 +15,7 @@ export function AppHeader({ eyebrow, title, subtitle, profileInitial, actionIcon
   return (
     <View style={{ gap: 18, paddingTop: topInset }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COLORS.contrast, alignItems: 'center', justifyContent: 'center' }}>
-            <BrandMark size={25} color={COLORS.primary} />
-          </View>
-          <View style={{ gap: 2 }}>
-            <Text style={{ color: COLORS.ink, fontSize: 12, fontWeight: '900', letterSpacing: 1.2 }}>DIR · DO IT RIGHT</Text>
-            <Text style={{ color: COLORS.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.4 }}>{eyebrow}</Text>
-          </View>
-        </View>
+        <View style={{ gap: 3 }}><BrandLockup size={22} /><Text style={{ color: COLORS.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.4 }}>{eyebrow}</Text></View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
           {actionIcon && onAction ? <Pressable accessibilityRole="button" accessibilityLabel={`Open ${actionIcon}`} onPress={onAction} hitSlop={8} style={({ pressed }) => [{ width: 38, height: 38, borderRadius: RADIUS.small, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.55 }]}><Glyph name={actionIcon} size={17} color={COLORS.ink} /></Pressable> : null}
           <Pressable accessibilityRole="button" accessibilityLabel="Open profile" onPress={() => router.push('/(tabs)/you')} style={({ pressed }) => [{ width: 38, height: 38, borderRadius: 14, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' }, pressed && { transform: [{ scale: 0.94 }] }]}>

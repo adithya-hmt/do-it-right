@@ -11,7 +11,7 @@ type CreateSpaceInput = {
 };
 
 export function createSharedSpace(workspace: WorkspaceV3, input: CreateSpaceInput): WorkspaceV3 {
-  const space = { id: input.id, name: input.name.trim(), description: input.description?.trim() ?? '', color: input.color ?? '#C44F2B', createdBy: input.userId, createdAt: input.now, updatedAt: input.now, revision: 0, deletedAt: null };
+  const space = { id: input.id, name: input.name.trim(), description: input.description?.trim() ?? '', color: input.color ?? '#E06A3D', createdBy: input.userId, createdAt: input.now, updatedAt: input.now, revision: 0, deletedAt: null };
   const membership = { id: input.memberId, spaceId: input.id, userId: input.userId, displayName: workspace.profile.displayName, email: workspace.profile.email, avatarColor: workspace.profile.avatarColor, role: 'owner' as const, status: 'active' as const, joinedAt: input.now };
   return { ...workspace, spaces: [...workspace.spaces, space], memberships: [...workspace.memberships, membership] };
 }

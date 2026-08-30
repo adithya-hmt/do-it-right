@@ -18,7 +18,7 @@
     "android": {
       "package": "com.adithyahmt.doitright",
       "adaptiveIcon": {
-        "backgroundColor": "#C44F2B",
+        "backgroundColor": "#E06A3D",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -42,7 +42,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F7F2E8",
+          "backgroundColor": "#F6F1E8",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

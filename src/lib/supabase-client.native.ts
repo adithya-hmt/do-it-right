@@ -1,5 +1,5 @@
 import { AppState } from 'react-native';
-import { createClient, processLock } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { Storage } from 'expo-sqlite/kv-store';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -15,7 +15,6 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         detectSessionInUrl: false,
         flowType: 'pkce',
-        lock: processLock,
       },
     })
   : null;

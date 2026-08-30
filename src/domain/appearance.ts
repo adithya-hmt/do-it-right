@@ -1,6 +1,7 @@
 export type ResolvedAppearanceMode = 'light' | 'dark';
 
-const DEFAULT_ACCENT = '#C44F2B';
+// The board's production palette: warm paper, terracotta action, and ink.
+const DEFAULT_ACCENT = '#E06A3D';
 
 function parseHex(value: string) {
   const match = value.trim().match(/^#([0-9a-f]{6})$/i);
@@ -34,30 +35,34 @@ function mix(color: string, target: string, amount: number) {
 export function createAppearanceColors(accent: string, mode: ResolvedAppearanceMode) {
   const primary = parseHex(accent) ? accent.toUpperCase() : DEFAULT_ACCENT;
   const dark = mode === 'dark';
-  const canvas = dark ? '#191714' : '#F7F2E8';
-  const surface = dark ? '#24211D' : '#FFFCF5';
-  const ink = dark ? '#FFF9EF' : '#24211D';
-  const onAccent = isReadablePair('#FFFFFF', primary) ? '#FFFFFF' : '#1C1713';
+  const canvas = dark ? '#1F1F1F' : '#F6F1E8';
+  const surface = dark ? '#292724' : '#FFFDF8';
+  const ink = dark ? '#FFF9EF' : '#1F1F1F';
+  const onAccent = isReadablePair('#FFFFFF', primary) ? '#FFFFFF' : '#1F1F1F';
   return {
     canvas,
     surface,
     ink,
-    muted: dark ? '#BDB4A8' : '#6F675E',
-    softMuted: dark ? '#8F877E' : '#9B9288',
-    line: dark ? '#3B3731' : '#E7DED1',
+    muted: dark ? '#C9C1B7' : '#6B665F',
+    softMuted: dark ? '#978F86' : '#9A9288',
+    line: dark ? '#403B36' : '#E6E1D9',
     primary,
     onAccent,
-    primarySoft: mix(primary, dark ? '#191714' : '#FFFFFF', dark ? 0.7 : 0.86),
-    danger: dark ? '#FF9A85' : '#A83A2B',
-    warning: dark ? '#F0C56B' : '#806018',
-    success: dark ? '#7FD0A5' : '#246C4B',
+    primarySoft: mix(primary, dark ? '#1F1F1F' : '#FFFFFF', dark ? 0.7 : 0.86),
+    danger: dark ? '#F18A7B' : '#D64545',
+    warning: dark ? '#F2C66E' : '#E0A800',
+    success: dark ? '#8FD0A4' : '#2E7D5B',
+    info: dark ? '#8CB6FF' : '#3F82F6',
+    sage: dark ? '#91B79A' : '#6A946F',
+    clay: dark ? '#CDB08D' : '#D8B98C',
+    stone: dark ? '#514B44' : '#E6E1D9',
   } as const;
 }
 
 export const DIR_PALETTES = {
-  warm: '#C44F2B',
-  forest: '#3F7352',
-  ocean: '#1976D2',
+  warm: '#E06A3D',
+  forest: '#2E7D5B',
+  ocean: '#3F82F6',
   berry: '#9C3F67',
-  gold: '#8A6416',
+  gold: '#D8B98C',
 } as const;

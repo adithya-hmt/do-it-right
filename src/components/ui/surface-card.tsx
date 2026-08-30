@@ -10,5 +10,5 @@ type SurfaceCardProps = ViewProps & {
 
 export function SurfaceCard({ tone = 'surface', style, ...props }: SurfaceCardProps) {
   const backgroundColor = tone === 'contrast' ? COLORS.contrast : tone === 'primary' ? COLORS.primarySoft : COLORS.surface;
-  return <View {...props} style={[{ backgroundColor, borderRadius: RADIUS.medium, boxShadow: SHADOW }, style]} />;
+  return <View {...props} style={[{ backgroundColor, borderRadius: RADIUS.medium, borderWidth: 1, borderColor: tone === 'contrast' ? COLORS.contrastLine : COLORS.line, boxShadow: SHADOW, overflow: 'hidden' }, style]} />;
 }

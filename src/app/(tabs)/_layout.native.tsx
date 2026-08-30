@@ -5,7 +5,7 @@ import { COLORS } from '@/constants/theme';
 
 export default function NativeTabsLayout() {
   return (
-    <NativeTabs tintColor={COLORS.primary}>
+    <NativeTabs tintColor={COLORS.primary} backgroundColor={COLORS.contrast}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Icon sf={{ default: 'tray', selected: 'tray.fill' }} md="inbox" />
         <NativeTabs.Trigger.Label>Inbox</NativeTabs.Trigger.Label>

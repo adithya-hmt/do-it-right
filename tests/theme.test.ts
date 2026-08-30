@@ -7,16 +7,16 @@ describe('theme tokens', () => {
     applyTheme('dark');
 
     expect(COLORS.ink).toBe('#FFF9EF');
-    expect(COLORS.contrast).toBe('#24211D');
+    expect(COLORS.contrast).toBe('#171716');
     expect(COLORS.contrastText).toBe('#FFF9EF');
   });
 
   test('restores the warm light palette and accepts a custom accent', () => {
     applyTheme('light');
 
-    expect(COLORS.canvas).toBe('#F7F2E8');
-    expect(COLORS.primary).toBe('#C44F2B');
-    expect(COLORS.contrast).toBe('#24211D');
+    expect(COLORS.canvas).toBe('#F6F1E8');
+    expect(COLORS.primary).toBe('#E06A3D');
+    expect(COLORS.contrast).toBe('#1F1F1F');
 
     applyTheme('light', '#1976D2');
     expect(COLORS.primary).toBe('#1976D2');

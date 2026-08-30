@@ -7,13 +7,13 @@ import { Glyph } from '@/components/ui/glyph';
 import { COLORS, GUTTER, RADIUS } from '@/constants/theme';
 import { useTasks } from '@/context/task-context';
 
-const COLORS_PICKER = ['#C44F2B', '#3F7352', '#1976D2', '#9C3F67', '#8A6416'];
+const COLORS_PICKER = ['#E06A3D', '#2E7D5B', '#3F82F6', '#9C3F67', '#D8B98C'];
 
 export default function NewSpaceScreen() {
   const { session, createSpace } = useTasks();
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [color, setColor] = React.useState('#C44F2B');
+  const [color, setColor] = React.useState('#E06A3D');
   function save() {
     if (!session || !name.trim()) return;
     const id = createSpace({ name, description, color });

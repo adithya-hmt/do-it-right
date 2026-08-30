@@ -10,8 +10,8 @@ export function formatAuthError(error: unknown, fallback = 'DIR could not comple
     if (provider === 'google') return 'Google sign-in is not enabled for this Supabase project. Use the email link or enable Google in Supabase Auth.';
     return 'This sign-in method is not enabled for this Supabase project. Enable it in Supabase Auth.';
   }
-  if (normalized.includes('redirect') && (normalized.includes('not allowed') || normalized.includes('whitelist') || normalized.includes('allow list'))) {
-    return 'This sign-in link is not allow-listed in Supabase Auth. Add doitright://auth/callback to the redirect URLs.';
+  if (normalized.includes('redirect') && (normalized.includes('not allowed') || normalized.includes('whitelist') || normalized.includes('allow list') || normalized.includes('invalid'))) {
+    return 'This sign-in link is not allow-listed in Supabase Auth. Add doitright://auth/callback and your web callback URL in Authentication → URL Configuration.';
   }
   if (normalized.includes('code verifier') || normalized.includes('pkce')) {
     return 'This sign-in session expired. Start sign-in again from DIR on this device.';

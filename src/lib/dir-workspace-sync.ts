@@ -15,7 +15,7 @@ function mapSpace(row: DbRow): Space {
 }
 
 function mapMembership(row: DbRow, previous?: SpaceMember): SpaceMember {
-  return { id: String(row.id), spaceId: String(row.space_id), userId: String(row.user_id), displayName: previous?.displayName ?? 'Teammate', email: previous?.email ?? null, avatarColor: previous?.avatarColor ?? '#C44F2B', role: row.role as SpaceMember['role'], status: row.status as SpaceMember['status'], joinedAt: row.joined_at ? String(row.joined_at) : null };
+  return { id: String(row.id), spaceId: String(row.space_id), userId: String(row.user_id), displayName: previous?.displayName ?? 'Teammate', email: previous?.email ?? null, avatarColor: previous?.avatarColor ?? '#E06A3D', role: row.role as SpaceMember['role'], status: row.status as SpaceMember['status'], joinedAt: row.joined_at ? String(row.joined_at) : null };
 }
 
 function mapProject(row: DbRow, previous?: ProjectV3): ProjectV3 {

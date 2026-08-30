@@ -19,19 +19,23 @@ function buildColors(mode: 'light' | 'dark', accent: string = DIR_PALETTES.warm)
     coralSoft: dark ? '#4A2922' : '#F9E5DC',
     lavender: adaptive.primarySoft,
     lavenderInk: adaptive.primary,
-    mint: dark ? '#203A2D' : '#DFF2E6',
+    mint: dark ? '#203A2D' : '#E4F0E7',
     mintInk: adaptive.success,
     amber: adaptive.warning,
     white: '#FFFFFF',
-    contrast: '#24211D',
+    contrast: dark ? '#171716' : '#1F1F1F',
     contrastText: '#FFF9EF',
-    contrastMuted: '#C9C0B5',
-    contrastSurface: '#38332D',
-    contrastLine: '#4B443C',
+    contrastMuted: dark ? '#C9C1B7' : '#CFC8BE',
+    contrastSurface: dark ? '#302D29' : '#38332D',
+    contrastLine: dark ? '#403B36' : '#4B443C',
     onAccent: adaptive.onAccent,
     danger: adaptive.danger,
     success: adaptive.success,
     warning: adaptive.warning,
+    info: adaptive.info,
+    sage: adaptive.sage,
+    clay: adaptive.clay,
+    stone: adaptive.stone,
   };
 }
 
@@ -46,11 +50,11 @@ export function applyTheme(theme: ThemePreference | 'dark' | 'light', accent: st
 
 export const FONTS = Platform.select({
   ios: { sans: 'system-ui', rounded: 'ui-rounded', mono: 'ui-monospace' },
-  web: { sans: 'system-ui, -apple-system, sans-serif', rounded: 'ui-rounded', mono: 'ui-monospace' },
+  web: { sans: 'Inter, system-ui, -apple-system, sans-serif', rounded: 'Inter, system-ui, sans-serif', mono: 'ui-monospace' },
   default: { sans: 'sans-serif', rounded: 'sans-serif-medium', mono: 'monospace' },
 });
 
-export const SHADOW = '0 8px 24px rgba(36, 33, 29, 0.08)';
-export const DEEP_SHADOW = '0 14px 34px rgba(36, 33, 29, 0.18)';
-export const RADIUS = { small: 10, medium: 16, large: 24, pill: 999 } as const;
+export const SHADOW = '0 3px 12px rgba(31, 31, 31, 0.08)';
+export const DEEP_SHADOW = '0 12px 28px rgba(31, 31, 31, 0.18)';
+export const RADIUS = { small: 9, medium: 14, large: 22, pill: 999 } as const;
 export const GUTTER = 20;

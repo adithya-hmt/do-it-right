@@ -29,6 +29,6 @@ export default {
     }, { onConflict: 'space_id,user_id' })
     if (memberError) return Response.json({ error: memberError.message }, { status: 400 })
     await ctx.supabaseAdmin.from('dir_invitations').update({ accepted_at: new Date().toISOString() }).eq('id', invitation.id)
-    return Response.json({ spaceId: invitation.space_id, displayName: profile?.display_name ?? userEmail.split('@')[0], avatarColor: profile?.avatar_color ?? '#C44F2B' })
+    return Response.json({ spaceId: invitation.space_id, displayName: profile?.display_name ?? userEmail.split('@')[0], avatarColor: profile?.avatar_color ?? '#E06A3D' })
   }),
 }

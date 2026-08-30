@@ -23,15 +23,15 @@ export default function AndroidTabsLayout() {
         tabBarInactiveTintColor: COLORS.contrastMuted,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 62 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: Math.max(8, insets.bottom),
-          backgroundColor: COLORS.surface,
+          height: 68 + insets.bottom,
+          paddingTop: 9,
+          paddingBottom: Math.max(9, insets.bottom),
+          backgroundColor: COLORS.contrast,
           borderTopWidth: 1,
-          borderTopColor: COLORS.line,
+          borderTopColor: COLORS.contrastLine,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '900' },
-        tabBarItemStyle: { gap: 3 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '800' },
+        tabBarItemStyle: { gap: 4 },
       }}>
       <Tabs.Screen
         name="index"
