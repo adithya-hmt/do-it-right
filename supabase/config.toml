@@ -34,6 +34,12 @@ additional_redirect_urls = ["http://localhost:8081/auth/callback", "doitright://
 enable_signup = true
 enable_anonymous_sign_ins = false
 
+[auth.external.google]
+enabled = true
+client_id = "902749259572-g4foi393qp11isv09cq7tomslkp6ot08.apps.googleusercontent.com"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false
+
 [functions.invite-member]
 enabled = true
 verify_jwt = true
