@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { ActivityEvent, ProjectV3, Space, SpaceMember, TaskComment, WorkspaceNotification, WorkspaceV3 } from '@/domain/types';
+import type { ActivityEvent, Invitation, ProjectV3, Space, SpaceMember, TaskComment, WorkspaceNotification, WorkspaceV3 } from '@/domain/types';
 import { mergeDirTasks, toDirTaskRow, type DirTaskRow } from '@/lib/dir-sync';
 
 type DbRow = Record<string, unknown>;
@@ -16,6 +16,10 @@ function mapSpace(row: DbRow): Space {
 
 function mapMembership(row: DbRow, previous?: SpaceMember): SpaceMember {
   return { id: String(row.id), spaceId: String(row.space_id), userId: String(row.user_id), displayName: previous?.displayName ?? 'Teammate', email: previous?.email ?? null, avatarColor: previous?.avatarColor ?? '#E06A3D', role: row.role as SpaceMember['role'], status: row.status as SpaceMember['status'], joinedAt: row.joined_at ? String(row.joined_at) : null };
+}
+
+function mapInvitation(row: DbRow): Invitation {
+  return { id: String(row.id), spaceId: String(row.space_id), email: row.email ? String(row.email) : null, role: row.role as Invitation['role'], invitedBy: String(row.invited_by), expiresAt: String(row.expires_at), acceptedAt: row.accepted_at ? String(row.accepted_at) : null, revokedAt: row.revoked_at ? String(row.revoked_at) : null };
 }
 
 function mapProject(row: DbRow, previous?: ProjectV3): ProjectV3 {
@@ -71,9 +75,10 @@ export async function synchronizeDirWorkspace(client: SupabaseClient, workspace:
     if (result.error) throw result.error;
   }
 
-  const [spacesResult, membershipsResult, projectsResult, tasksResult, commentsResult, notificationsResult, activityResult] = await Promise.all([
+  const [spacesResult, membershipsResult, invitationsResult, projectsResult, tasksResult, commentsResult, notificationsResult, activityResult] = await Promise.all([
     client.from('dir_spaces').select('*').is('deleted_at', null),
     client.from('dir_space_members').select('*').neq('status', 'removed'),
+    client.from('dir_invitations').select('*').is('accepted_at', null).is('revoked_at', null).order('created_at', { ascending: false }),
     client.from('dir_projects').select('*').is('deleted_at', null).order('position'),
     client.from('dir_tasks').select('*').is('deleted_at', null).order('position'),
     client.from('dir_task_comments').select('*').is('deleted_at', null).order('created_at'),
@@ -82,11 +87,12 @@ export async function synchronizeDirWorkspace(client: SupabaseClient, workspace:
   ]);
   const spaces = requiredRows(spacesResult.data as DbRow[] | null, spacesResult.error).map(mapSpace);
   const memberships = requiredRows(membershipsResult.data as DbRow[] | null, membershipsResult.error).map((row) => mapMembership(row, workspace.memberships.find((member) => member.id === row.id)));
+  const invitations = requiredRows(invitationsResult.data as DbRow[] | null, invitationsResult.error).map(mapInvitation);
   const projects = requiredRows(projectsResult.data as DbRow[] | null, projectsResult.error).map((row) => mapProject(row, workspace.projects.find((project) => project.id === row.id)));
   const projectNames = new Map(projects.map((project) => [project.id, project.name]));
   const tasks = mergeDirTasks(mergedTasks, requiredRows(tasksResult.data as DirTaskRow[] | null, tasksResult.error)).map((task) => ({ ...task, project: task.projectId ? projectNames.get(task.projectId) ?? task.project : 'Inbox', syncState: 'clean' as const }));
   const comments = requiredRows(commentsResult.data as DbRow[] | null, commentsResult.error).map(mapComment);
   const notifications = requiredRows(notificationsResult.data as DbRow[] | null, notificationsResult.error).map(mapNotification);
   const activity = requiredRows(activityResult.data as DbRow[] | null, activityResult.error).map(mapActivity);
-  return { ...workspace, spaces, memberships, projects, tasks, comments, notifications, activity, syncQueue: [], syncCursor: new Date().toISOString() };
+  return { ...workspace, spaces, memberships, invitations, projects, tasks, comments, notifications, activity, syncQueue: [], syncCursor: new Date().toISOString() };
 }

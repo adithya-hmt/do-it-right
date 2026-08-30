@@ -68,7 +68,7 @@ export default function RootLayout() {
         <Stack.Screen name="account" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Keep your workspace', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="new-space" options={{ presentation: 'modal', headerShown: true, headerTitle: 'New space', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="space/[id]" options={{ headerShown: true, headerTitle: 'Space', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="space-members" options={{ headerShown: true, headerTitle: 'People', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
+        <Stack.Screen name="space-members" options={{ presentation: 'modal', headerShown: true, headerTitle: 'People', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite" options={{ headerShown: false }} />
         <Stack.Screen name="project/[id]" options={{ headerShown: true, headerTitle: 'Project', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />

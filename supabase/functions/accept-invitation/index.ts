@@ -15,8 +15,8 @@ export default {
     if (!userId || !userEmail || !input?.invitationId || !input.token) return Response.json({ error: 'A valid signed-in invitation is required' }, { status: 400 })
     const { data: invitation, error } = await ctx.supabaseAdmin.from('dir_invitations').select('*').eq('id', input.invitationId).single()
     if (error || !invitation) return Response.json({ error: 'Invitation not found' }, { status: 404 })
-    if (invitation.accepted_at || new Date(invitation.expires_at).getTime() < Date.now()) return Response.json({ error: 'This invitation is no longer active' }, { status: 410 })
-    if (invitation.email.toLocaleLowerCase() !== userEmail || invitation.token_hash !== await sha256(input.token)) return Response.json({ error: 'This invitation belongs to another account' }, { status: 403 })
+    if ((invitation.email && invitation.accepted_at) || invitation.revoked_at || new Date(invitation.expires_at).getTime() < Date.now()) return Response.json({ error: 'This invitation is no longer active' }, { status: 410 })
+    if ((invitation.email && invitation.email.toLocaleLowerCase() !== userEmail) || invitation.token_hash !== await sha256(input.token)) return Response.json({ error: 'This invitation belongs to another account' }, { status: 403 })
 
     const { data: profile } = await ctx.supabaseAdmin.from('dir_profiles').select('display_name,avatar_color').eq('user_id', userId).maybeSingle()
     const { error: memberError } = await ctx.supabaseAdmin.from('dir_space_members').upsert({
@@ -28,7 +28,7 @@ export default {
       joined_at: new Date().toISOString(),
     }, { onConflict: 'space_id,user_id' })
     if (memberError) return Response.json({ error: memberError.message }, { status: 400 })
-    await ctx.supabaseAdmin.from('dir_invitations').update({ accepted_at: new Date().toISOString() }).eq('id', invitation.id)
+    if (invitation.email) await ctx.supabaseAdmin.from('dir_invitations').update({ accepted_at: new Date().toISOString() }).eq('id', invitation.id)
     return Response.json({ spaceId: invitation.space_id, displayName: profile?.display_name ?? userEmail.split('@')[0], avatarColor: profile?.avatar_color ?? '#E06A3D' })
   }),
 }

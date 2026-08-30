@@ -21,7 +21,8 @@ describe('Invite screen', () => {
   test('refreshes the workspace before opening an accepted space', async () => {
     const acceptInvitation = jest.fn().mockResolvedValue({ spaceId: 'space-1', error: null });
     const syncNow = jest.fn().mockResolvedValue(undefined);
-    mockTaskContext = { session: { user: { id: 'user-1' } }, acceptInvitation, syncNow };
+    const previewInvitation = jest.fn().mockResolvedValue({ data: null, error: null });
+    mockTaskContext = { session: { user: { id: 'user-1' } }, acceptInvitation, previewInvitation, syncNow };
 
     const view = await render(<InviteScreen />);
     fireEvent.press(view.getByText('Join space'));

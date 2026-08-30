@@ -186,11 +186,12 @@ export type SpaceMember = {
 export type Invitation = {
   id: string;
   spaceId: string;
-  email: string;
+  email: string | null;
   role: Exclude<SpaceRole, 'owner'>;
   invitedBy: string;
   expiresAt: string;
   acceptedAt: string | null;
+  revokedAt: string | null;
 };
 
 export type TaskComment = {

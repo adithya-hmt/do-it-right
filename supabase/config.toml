@@ -72,3 +72,21 @@ entrypoint = "./functions/accept-invitation/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/accept-invitation/*.html" ]
+
+[functions.preview-invitation]
+enabled = true
+verify_jwt = false
+import_map = "./functions/preview-invitation/deno.json"
+entrypoint = "./functions/preview-invitation/index.ts"
+
+[functions.manage-invitation]
+enabled = true
+verify_jwt = true
+import_map = "./functions/manage-invitation/deno.json"
+entrypoint = "./functions/manage-invitation/index.ts"
+
+[functions.manage-member]
+enabled = true
+verify_jwt = true
+import_map = "./functions/manage-member/deno.json"
+entrypoint = "./functions/manage-member/index.ts"

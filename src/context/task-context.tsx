@@ -1,5 +1,5 @@
 import React from 'react';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 
@@ -75,6 +75,22 @@ type NewTaskInput = {
 
 type TaskPatch = Partial<Pick<TaskV3, 'title' | 'notes' | 'projectId' | 'project' | 'category' | 'due' | 'dueAt' | 'plannedDate' | 'dueDate' | 'dueTime' | 'reminderAt' | 'priority' | 'estimateMinutes' | 'status' | 'spaceId' | 'assigneeId'>>;
 
+type InviteResult = {
+  error: string | null;
+  shareUrl?: string;
+  expiresAt?: string;
+  invitationIds?: string[];
+  failed?: { email: string; error: string }[];
+};
+
+export type InvitationPreview = {
+  invitationId: string;
+  role: 'admin' | 'member';
+  expiresAt: string;
+  space: { name: string; description: string; color: string };
+  inviter: { displayName: string; avatarColor: string };
+};
+
 type TaskContextValue = {
   tasks: TaskV3[];
   projects: ProjectV3[];
@@ -90,6 +106,7 @@ type TaskContextValue = {
   inboxCount: number;
   spaces: Space[];
   memberships: SpaceMember[];
+  invitations: WorkspaceV3['invitations'];
   comments: TaskComment[];
   activity: WorkspaceV3['activity'];
   notifications: WorkspaceNotification[];
@@ -98,6 +115,11 @@ type TaskContextValue = {
   addComment: (taskId: string, body: string) => void;
   markNotificationRead: (id: string) => void;
   inviteMember: (spaceId: string, email: string, role?: 'admin' | 'member') => Promise<{ error: string | null }>;
+  inviteMembers: (spaceId: string, emails: string[], role?: 'admin' | 'member') => Promise<InviteResult>;
+  createSpaceInvite: (spaceId: string) => Promise<InviteResult>;
+  manageInvitation: (invitationId: string, action: 'cancel' | 'resend') => Promise<{ error: string | null; shareUrl?: string; expiresAt?: string }>;
+  manageMember: (spaceId: string, action: 'leave' | 'remove', userId?: string) => Promise<{ error: string | null }>;
+  previewInvitation: (invitationId: string, token: string) => Promise<{ data: InvitationPreview | null; error: string | null }>;
   toggleTask: (id: string) => void;
   addTask: (task: NewTaskInput) => void;
   updateTask: (id: string, patch: TaskPatch) => void;
@@ -111,16 +133,17 @@ type TaskContextValue = {
   saveWeeklyReview: (review: WeeklyReview) => void;
   updateProfile: (patch: Partial<ProfileV3>) => void;
   finishOnboarding: () => void;
-  linkEmail: (email: string) => Promise<{ error: string | null }>;
+  linkEmail: (email: string, next?: string) => Promise<{ error: string | null }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   exportData: () => Promise<boolean>;
   addProject: (input: { name: string; outcome: string; areaId: string; spaceId?: string | null }) => void;
   updateProject: (id: string, patch: Partial<ProjectV3>) => void;
   signOut: () => Promise<{ error: string | null }>;
   deleteAccount: () => Promise<{ error: string | null }>;
-  signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithGoogle: (next?: string) => Promise<{ error: string | null }>;
   completeAuthUrl: (url: string) => Promise<{ error: string | null }>;
   acceptInvitation: (invitationId: string, token: string) => Promise<{ spaceId: string | null; error: string | null }>;
-  syncNow: () => void;
+  syncNow: () => Promise<void>;
 };
 
 const TaskContext = React.createContext<TaskContextValue | null>(null);
@@ -410,16 +433,26 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
 
   const finishOnboarding = React.useCallback(() => updateProfile({ onboardingComplete: true }), [updateProfile]);
 
-  const linkEmail = React.useCallback(async (email: string) => {
+  const linkEmail = React.useCallback(async (email: string, next?: string) => {
     if (!supabase) return { error: 'Add Supabase variables in .env.local before linking an account.' };
     try {
       const authSettings = await getSupabaseAuthSettings();
       if (authSettings && !authSettings.email) return { error: formatAuthError('Unsupported provider: email is not enabled', 'Email sign-in is unavailable.', 'email') };
-      await authService?.signInWithEmailOtp(email.trim(), getAuthRedirectUrl());
+      await authService?.signInWithEmailOtp(email.trim(), getAuthRedirectUrl(next));
       return { error: null };
     } catch (error) {
       const message = formatAuthError(error, 'We could not start account linking.', 'email');
       return { error: message };
+    }
+  }, []);
+
+  const verifyEmailOtp = React.useCallback(async (email: string, token: string) => {
+    if (!supabase) return { error: 'Add Supabase variables in .env.local before signing in.' };
+    try {
+      await authService?.verifyEmailOtp(email.trim(), token.trim());
+      return { error: null };
+    } catch (error) {
+      return { error: formatAuthError(error, 'That code is invalid or expired. Request a fresh one.') };
     }
   }, []);
 
@@ -443,13 +476,17 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     }
   }, []);
 
-  const signInWithGoogle = React.useCallback(async () => {
+  const signInWithGoogle = React.useCallback(async (next?: string) => {
     if (!authService) return { error: 'Add Supabase variables before signing in.' };
     try {
       const authSettings = await getSupabaseAuthSettings();
       if (authSettings && !authSettings.google) return { error: formatAuthError('Unsupported provider: google is not enabled', 'Google sign-in is unavailable.', 'google') };
-      const redirectTo = getAuthRedirectUrl();
+      const redirectTo = getAuthRedirectUrl(next);
       await authService.signInWithGoogle(redirectTo, async (url, callback) => {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.location.assign(url);
+          return null;
+        }
         const result = await WebBrowser.openAuthSessionAsync(url, callback);
         return result.type === 'success' ? result.url : null;
       });
@@ -479,6 +516,17 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       return { spaceId: null, error: error instanceof Error ? error.message : 'DIR could not accept this invitation.' };
     }
   }, [session]);
+
+  const previewInvitation = React.useCallback(async (invitationId: string, token: string) => {
+    if (!supabase) return { data: null, error: 'Cloud invitations are not configured.' };
+    try {
+      const { data, error } = await supabase.functions.invoke<InvitationPreview>('preview-invitation', { body: { invitationId, token } });
+      if (error) throw error;
+      return { data: data ?? null, error: null };
+    } catch (error) {
+      return { data: null, error: error instanceof Error ? error.message : 'DIR could not load this invitation.' };
+    }
+  }, []);
 
   const exportData = React.useCallback(() => exportWorkspace(workspaceRef.current), []);
 
@@ -526,16 +574,58 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     if (supabase && session) void supabase.from('dir_notifications').update({ read_at: nowIso() }).eq('id', id);
   }, [commit, session]);
 
-  const inviteMember = React.useCallback(async (spaceId: string, email: string, role: 'admin' | 'member' = 'member') => {
+  const inviteMembers = React.useCallback(async (spaceId: string, emails: string[], role: 'admin' | 'member' = 'member'): Promise<InviteResult> => {
     if (!supabase || !session) return { error: 'Sign in before inviting someone.' };
     try {
-      const { error } = await supabase.functions.invoke('invite-member', { body: { spaceId, email: email.trim().toLocaleLowerCase(), role } });
+      const { data, error } = await supabase.functions.invoke<{ invites?: { invitationId: string; expiresAt: string; shareUrl: string }[]; failed?: { email: string; error: string }[]; shareUrl?: string; expiresAt?: string }>('invite-member', { body: { spaceId, emails, role, mode: 'email' } });
       if (error) throw error;
+      await syncNow();
+      return { error: null, shareUrl: data?.shareUrl, expiresAt: data?.expiresAt, invitationIds: data?.invites?.map((invite) => invite.invitationId), failed: data?.failed };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not send the invitations.' };
+    }
+  }, [session, syncNow]);
+
+  const inviteMember = React.useCallback(async (spaceId: string, email: string, role: 'admin' | 'member' = 'member') => {
+    const result = await inviteMembers(spaceId, [email], role);
+    return { error: result.error };
+  }, [inviteMembers]);
+
+  const createSpaceInvite = React.useCallback(async (spaceId: string) => {
+    if (!supabase || !session) return { error: 'Sign in before creating an invite link.' };
+    try {
+      const { data, error } = await supabase.functions.invoke<{ shareUrl?: string; expiresAt?: string }>('invite-member', { body: { spaceId, mode: 'link', role: 'member' } });
+      if (error) throw error;
+      await syncNow();
+      return { error: null, shareUrl: data?.shareUrl, expiresAt: data?.expiresAt };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not create the invite link.' };
+    }
+  }, [session, syncNow]);
+
+  const manageInvitation = React.useCallback(async (invitationId: string, action: 'cancel' | 'resend') => {
+    if (!supabase || !session) return { error: 'Sign in before managing invitations.' };
+    try {
+      const { data, error } = await supabase.functions.invoke<{ shareUrl?: string; expiresAt?: string }>('manage-invitation', { body: { invitationId, action } });
+      if (error) throw error;
+      await syncNow();
+      return { error: null, shareUrl: data?.shareUrl, expiresAt: data?.expiresAt };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DIR could not update this invitation.' };
+    }
+  }, [session, syncNow]);
+
+  const manageMember = React.useCallback(async (spaceId: string, action: 'leave' | 'remove', userId?: string) => {
+    if (!supabase || !session) return { error: 'Sign in before managing space members.' };
+    try {
+      const { error } = await supabase.functions.invoke('manage-member', { body: { spaceId, action, userId } });
+      if (error) throw error;
+      await syncNow();
       return { error: null };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'DIR could not send the invitation.' };
+      return { error: error instanceof Error ? error.message : 'DIR could not update this membership.' };
     }
-  }, [session]);
+  }, [session, syncNow]);
 
   const value = React.useMemo<TaskContextValue>(() => ({
     tasks,
@@ -551,6 +641,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     syncMessage,
     spaces: workspace.spaces,
     memberships: workspace.memberships,
+    invitations: workspace.invitations,
     comments: workspace.comments,
     activity: workspace.activity,
     notifications: workspace.notifications,
@@ -570,6 +661,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     updateProfile,
     finishOnboarding,
     linkEmail,
+    verifyEmailOtp,
     exportData,
     addProject,
     updateProject,
@@ -577,13 +669,18 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     addComment,
     markNotificationRead,
     inviteMember,
+    inviteMembers,
+    createSpaceInvite,
+    manageInvitation,
+    manageMember,
+    previewInvitation,
     signOut,
     deleteAccount,
     signInWithGoogle,
     completeAuthUrl,
     acceptInvitation,
-    syncNow: () => void syncNow(),
-  }), [acceptInvitation, addComment, addProject, addTask, completeAuthUrl, completeRoutine, createSpace, deleteAccount, exportData, finishFocus, finishOnboarding, inviteMember, isRoutineComplete, linkEmail, markNotificationRead, projects, saveWeeklyReview, session, setDailyThree, setIntention, setTaskStatus, signInWithGoogle, signOut, startFocus, syncMessage, syncNow, syncStatus, tasks, todayPlan, toggleTask, updateProfile, updateProject, updateTask, workspace.activity, workspace.areas, workspace.comments, workspace.focusSessions, workspace.memberships, workspace.notifications, workspace.profile, workspace.routineCompletions, workspace.routines, workspace.spaces, workspace.weeklyReviews]);
+    syncNow,
+  }), [acceptInvitation, addComment, addProject, addTask, completeAuthUrl, completeRoutine, createSpace, createSpaceInvite, deleteAccount, exportData, finishFocus, finishOnboarding, inviteMember, inviteMembers, isRoutineComplete, linkEmail, manageInvitation, manageMember, markNotificationRead, previewInvitation, projects, saveWeeklyReview, session, setDailyThree, setIntention, setTaskStatus, signInWithGoogle, signOut, startFocus, syncMessage, syncNow, syncStatus, tasks, todayPlan, toggleTask, updateProfile, updateProject, updateTask, verifyEmailOtp, workspace.activity, workspace.areas, workspace.comments, workspace.focusSessions, workspace.invitations, workspace.memberships, workspace.notifications, workspace.profile, workspace.routineCompletions, workspace.routines, workspace.spaces, workspace.weeklyReviews]);
 
   if (!hydrated) return <MigrationGate error={migrationError} onRetry={() => { setMigrationError(null); setMigrationAttempt((attempt) => attempt + 1); }} onExport={() => { void exportLegacyWorkspace().then((raw) => raw ? exportLegacyJson(raw) : false); }} />;
 

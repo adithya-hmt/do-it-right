@@ -32,7 +32,23 @@ export function normalizeWebAuthRedirect(value: string | undefined) {
   }
 }
 
-export function getAuthRedirectUrl() {
+let pendingAuthNext: string | null = null;
+const PENDING_AUTH_NEXT_KEY = 'dir.pending-auth-next';
+
+export function setPendingAuthNext(next: string | undefined) {
+  if (!next) return;
+  pendingAuthNext = next;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') window.sessionStorage.setItem(PENDING_AUTH_NEXT_KEY, next);
+}
+
+export function consumePendingAuthNext() {
+  const next = pendingAuthNext ?? (Platform.OS === 'web' && typeof window !== 'undefined' ? window.sessionStorage.getItem(PENDING_AUTH_NEXT_KEY) : null);
+  pendingAuthNext = null;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') window.sessionStorage.removeItem(PENDING_AUTH_NEXT_KEY);
+  return next;
+}
+
+export function getAuthRedirectUrl(_next?: string) {
   if (Platform.OS !== 'web') return NATIVE_AUTH_REDIRECT_URL;
   const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
   return resolveWebAuthRedirect(process.env.EXPO_PUBLIC_WEB_AUTH_REDIRECT_URL, origin);
