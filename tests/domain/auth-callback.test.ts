@@ -8,7 +8,28 @@ describe('Supabase auth callback parsing', () => {
 
   test('extracts legacy token fragments and reports provider errors', () => {
     expect(parseAuthCallback('doitright://auth/callback#access_token=access&refresh_token=refresh')).toEqual({ accessToken: 'access', refreshToken: 'refresh' });
+    expect(parseAuthCallback('https://dir.example/auth/callback?token_hash=hash&type=email')).toEqual({ tokenHash: 'hash', type: 'email' });
     expect(() => parseAuthCallback('doitright://auth/callback?error_description=Denied')).toThrow('Denied');
+  });
+
+  test('verifies an email OTP from the account screen', async () => {
+    const session = { user: { id: 'user-1' } } as unknown as Session;
+    const verifyOtp = jest.fn().mockResolvedValue({ data: { session }, error: null });
+    const client = { auth: { verifyOtp } } as unknown as SupabaseClient;
+    const service = createAuthService(client);
+
+    await expect(service.verifyEmailOtp('person@example.com', '123456')).resolves.toBe(session);
+    expect(verifyOtp).toHaveBeenCalledWith({ email: 'person@example.com', token: '123456', type: 'email' });
+  });
+
+  test('verifies a token hash callback from a PKCE-compatible email template', async () => {
+    const session = { user: { id: 'user-1' } } as unknown as Session;
+    const verifyOtp = jest.fn().mockResolvedValue({ data: { session }, error: null });
+    const client = { auth: { verifyOtp } } as unknown as SupabaseClient;
+    const service = createAuthService(client);
+
+    await expect(service.completeAuthUrl('https://dir.example/auth/callback?token_hash=hash&type=email')).resolves.toBe(session);
+    expect(verifyOtp).toHaveBeenCalledWith({ token_hash: 'hash', type: 'email' });
   });
 
   test('shares one PKCE exchange when the same callback is delivered twice', async () => {

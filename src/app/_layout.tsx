@@ -23,19 +23,19 @@ export default function RootLayout() {
           screenOptions={{
             contentStyle: { backgroundColor: COLORS.canvas },
             headerShown: false,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: COLORS.canvas },
+            headerTintColor: COLORS.ink,
+            headerTitleStyle: { fontWeight: '800' },
           }}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" options={{ presentation: 'card', headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ presentation: 'card' }} />
         <Stack.Screen
           name="add-task"
           options={{
             presentation: 'modal',
             headerShown: true,
             headerTitle: 'New task',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: COLORS.canvas },
-            headerTintColor: COLORS.ink,
-            headerTitleStyle: { fontWeight: '800' },
           }}
         />
         <Stack.Screen
@@ -44,10 +44,6 @@ export default function RootLayout() {
             presentation: 'modal',
             headerShown: true,
             headerTitle: 'New project',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: COLORS.canvas },
-            headerTintColor: COLORS.ink,
-            headerTitleStyle: { fontWeight: '800' },
           }}
         />
         <Stack.Screen
@@ -56,26 +52,20 @@ export default function RootLayout() {
             presentation: 'modal',
             headerShown: true,
             headerTitle: 'Search',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: COLORS.canvas },
-            headerTintColor: COLORS.ink,
-            headerTitleStyle: { fontWeight: '800' },
           }}
         />
-        <Stack.Screen name="focus" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Focus', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="review" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Weekly review', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: 'Settings', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="account" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Keep your workspace', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="new-space" options={{ presentation: 'modal', headerShown: true, headerTitle: 'New space', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="space/[id]" options={{ headerShown: true, headerTitle: 'Space', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="space-members" options={{ presentation: 'modal', headerShown: true, headerTitle: 'People', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
-        <Stack.Screen name="invite" options={{ headerShown: false }} />
-        <Stack.Screen name="project/[id]" options={{ headerShown: true, headerTitle: 'Project', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="task/[id]" options={{ headerShown: true, headerTitle: 'Task details', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="daily-three" options={{ headerShown: true, headerTitle: 'Daily Three', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="routines" options={{ headerShown: true, headerTitle: 'Routines', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
-        <Stack.Screen name="completed" options={{ headerShown: true, headerTitle: 'Completed', headerShadowVisible: false, headerStyle: { backgroundColor: COLORS.canvas }, headerTintColor: COLORS.ink, headerTitleStyle: { fontWeight: '800' } }} />
+        <Stack.Screen name="focus" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Focus' }} />
+        <Stack.Screen name="review" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Weekly review' }} />
+        <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: 'Settings' }} />
+        <Stack.Screen name="account" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Keep your workspace' }} />
+        <Stack.Screen name="new-space" options={{ presentation: 'modal', headerShown: true, headerTitle: 'New space' }} />
+        <Stack.Screen name="space/[id]" options={{ headerShown: true, headerTitle: 'Space' }} />
+        <Stack.Screen name="space-members" options={{ presentation: 'modal', headerShown: true, headerTitle: 'People' }} />
+        <Stack.Screen name="project/[id]" options={{ headerShown: true, headerTitle: 'Project' }} />
+        <Stack.Screen name="task/[id]" options={{ headerShown: true, headerTitle: 'Task details' }} />
+        <Stack.Screen name="daily-three" options={{ headerShown: true, headerTitle: 'Daily Three' }} />
+        <Stack.Screen name="routines" options={{ headerShown: true, headerTitle: 'Routines' }} />
+        <Stack.Screen name="completed" options={{ headerShown: true, headerTitle: 'Completed' }} />
         </Stack>
       </TaskProvider>
     </SafeAreaProvider>

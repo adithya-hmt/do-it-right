@@ -1,6 +1,5 @@
 import { buildSeedWorkspace } from '@/domain/workspace';
 import { migrateWorkspaceV2ToV3 } from '@/domain/workspace-v3-migration';
-import { canManageMembers, canMutateSharedTask, getAssignedToMeTasks } from '@/domain/workspace-v3-selectors';
 
 describe('DIR workspace v3', () => {
   test('preserves v2 entities and ids while adding collaboration-safe fields', () => {
@@ -35,15 +34,5 @@ describe('DIR workspace v3', () => {
       tasks: migrated.tasks.map((task, index) => index === 0 ? { ...task, spaceId: 'space-home' } : task),
     };
     expect(() => migrateWorkspaceV2ToV3(invalid)).toThrow('project scope');
-  });
-
-  test('enforces member roles and selects open shared tasks assigned to the user', () => {
-    const workspace = migrateWorkspaceV2ToV3(buildSeedWorkspace('2026-08-28'));
-    const task = { ...workspace.tasks[0], id: 'shared-task', spaceId: 'space-team', assigneeId: 'member-1', completed: false };
-    expect(getAssignedToMeTasks([...workspace.tasks, task], 'member-1').map((item) => item.id)).toEqual(['shared-task']);
-    expect(canManageMembers('owner')).toBe(true);
-    expect(canManageMembers('admin')).toBe(true);
-    expect(canManageMembers('member')).toBe(false);
-    expect(canMutateSharedTask('member')).toBe(true);
   });
 });

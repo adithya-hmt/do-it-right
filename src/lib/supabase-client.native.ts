@@ -14,7 +14,9 @@ export const supabase = isSupabaseConfigured
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
-        flowType: 'pkce',
+        // Native deep links also consume the callback in-app, so the default
+        // Supabase email template works without a custom PKCE template.
+        flowType: 'implicit',
       },
     })
   : null;

@@ -23,13 +23,12 @@ import type {
   WorkspaceNotification,
   WorkspaceV3,
 } from '@/domain/types';
-import { exportLegacyWorkspace, loadWorkspace } from '@/lib/workspace-store';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { applyTheme } from '@/constants/theme';
 import { exportLegacyJson, exportWorkspace } from '@/platform/data-export';
 import { MigrationGate } from '@/components/migration-gate';
 import { migrateWorkspaceV2ToV3 } from '@/domain/workspace-v3-migration';
-import { createWorkspaceV3Repository, type WorkspaceV3Repository } from '@/lib/workspace-v3-repository';
+import { createWorkspaceV3Repository } from '@/lib/workspace-v3-repository';
 import { workspaceV3Storage } from '@/lib/workspace-v3-storage';
 import { claimGuestWorkspace, getAuthNamespace } from '@/domain/auth';
 import { createAuthService, formatAuthError } from '@/lib/auth-service';
@@ -38,6 +37,8 @@ import { synchronizeDirWorkspace } from '@/lib/dir-workspace-sync';
 import { repairLegacyWorkspaceIds } from '@/domain/legacy-id-repair';
 import { getSupabaseAuthSettings } from '@/lib/supabase-auth-settings';
 import { getAuthRedirectUrl } from '@/lib/auth-redirect';
+import { getWorkspaceStorage } from '@/lib/workspace-storage';
+import { createWorkspaceRepository } from '@/lib/workspace-repository';
 
 export type {
   DayPlan,
@@ -148,6 +149,7 @@ type TaskContextValue = {
 
 const TaskContext = React.createContext<TaskContextValue | null>(null);
 const authService = supabase ? createAuthService(supabase) : null;
+const legacyRepository = createWorkspaceRepository(getWorkspaceStorage());
 
 function nowIso() {
   return new Date().toISOString();
@@ -222,7 +224,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
   const [syncStatus, setSyncStatus] = React.useState<SyncStatus>(isSupabaseConfigured ? 'loading' : 'demo');
   const [syncMessage, setSyncMessage] = React.useState<string | null>(isSupabaseConfigured ? null : 'Your workspace is saved on this device. Add Supabase variables for cloud sync.');
   const workspaceRef = React.useRef(workspace);
-  const repositoryRef = React.useRef<WorkspaceV3Repository | null>(null);
+  const repositoryRef = React.useRef<ReturnType<typeof createWorkspaceV3Repository> | null>(null);
   const syncInFlight = React.useRef(false);
 
   // Theme tokens are shared by the small native UI surface. Resolve them before
@@ -277,11 +279,11 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
       const namespace = getAuthNamespace(nextSession?.user.id);
       const repository = createWorkspaceV3Repository(workspaceV3Storage, {
         namespace,
-        loadV2: namespace === 'guest' ? loadWorkspace : async () => null,
+        loadV2: namespace === 'guest' ? legacyRepository.load : async () => null,
       });
       let loaded = await repository.load();
       if (!loaded && nextSession) {
-        const guestRepository = createWorkspaceV3Repository(workspaceV3Storage, { namespace: 'guest', loadV2: loadWorkspace });
+        const guestRepository = createWorkspaceV3Repository(workspaceV3Storage, { namespace: 'guest', loadV2: legacyRepository.load });
         const guest = normalizeWorkspace(await guestRepository.load(), today);
         loaded = claimGuestWorkspace(guest, nextSession.user.id);
         loaded = { ...loaded, profile: { ...loaded.profile, email: nextSession.user.email ?? null } };
@@ -682,7 +684,7 @@ export function TaskProvider({ children }: React.PropsWithChildren) {
     syncNow,
   }), [acceptInvitation, addComment, addProject, addTask, completeAuthUrl, completeRoutine, createSpace, createSpaceInvite, deleteAccount, exportData, finishFocus, finishOnboarding, inviteMember, inviteMembers, isRoutineComplete, linkEmail, manageInvitation, manageMember, markNotificationRead, previewInvitation, projects, saveWeeklyReview, session, setDailyThree, setIntention, setTaskStatus, signInWithGoogle, signOut, startFocus, syncMessage, syncNow, syncStatus, tasks, todayPlan, toggleTask, updateProfile, updateProject, updateTask, verifyEmailOtp, workspace.activity, workspace.areas, workspace.comments, workspace.focusSessions, workspace.invitations, workspace.memberships, workspace.notifications, workspace.profile, workspace.routineCompletions, workspace.routines, workspace.spaces, workspace.weeklyReviews]);
 
-  if (!hydrated) return <MigrationGate error={migrationError} onRetry={() => { setMigrationError(null); setMigrationAttempt((attempt) => attempt + 1); }} onExport={() => { void exportLegacyWorkspace().then((raw) => raw ? exportLegacyJson(raw) : false); }} />;
+  if (!hydrated) return <MigrationGate error={migrationError} onRetry={() => { setMigrationError(null); setMigrationAttempt((attempt) => attempt + 1); }} onExport={() => { void legacyRepository.exportLegacy().then((raw) => raw ? exportLegacyJson(raw) : false); }} />;
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
 }
@@ -692,5 +694,3 @@ export function useTasks() {
   if (!value) throw new Error('useTasks must be used inside TaskProvider');
   return value;
 }
-
-export const useWorkspace = useTasks;

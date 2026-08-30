@@ -1,9 +1,10 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import type { ColorValue } from 'react-native';
+import { useWindowDimensions, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph, type GlyphName } from '@/components/ui/glyph';
+import { WebSidebar } from '@/components/web-sidebar';
 import { COLORS } from '@/constants/theme';
 
 function TabIcon({ name, color }: { name: GlyphName; color: ColorValue }) {
@@ -12,14 +13,16 @@ function TabIcon({ name, color }: { name: GlyphName; color: ColorValue }) {
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  return (
+  const { width } = useWindowDimensions();
+  const desktop = process.env.EXPO_OS === 'web' && width >= 960;
+  const tabs = (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.contrastMuted,
         tabBarHideOnKeyboard: true,
-        tabBarStyle: {
+        tabBarStyle: desktop ? { display: 'none' } : {
           height: 68 + insets.bottom,
           paddingTop: 9,
           paddingBottom: Math.max(9, insets.bottom),
@@ -64,4 +67,10 @@ export default function TabsLayout() {
       <Tabs.Screen name="projects" options={{ href: null }} />
     </Tabs>
   );
+
+  if (desktop) {
+    return <View style={{ flex: 1, flexDirection: 'row', backgroundColor: COLORS.canvas }}><WebSidebar /><View style={{ flex: 1, alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 1120 }}>{tabs}</View></View></View>;
+  }
+
+  return tabs;
 }

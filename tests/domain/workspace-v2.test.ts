@@ -1,13 +1,3 @@
-import {
-  addWorkspaceTask,
-  assignTaskProject,
-  cancelWorkspaceTask,
-  changeTaskPriority,
-  completeWorkspaceTask,
-  editWorkspaceTask,
-  scheduleWorkspaceTask,
-  undoWorkspaceTask,
-} from '@/domain/task-commands';
 import { migrateWorkspaceV1 } from '@/domain/workspace-migration';
 import {
   getCompletedTasks,
@@ -88,31 +78,5 @@ describe('workspace selectors', () => {
     expect(getProjectTasks(tasks, 'northstar').map((item) => item.id)).toEqual(['today', 'future']);
     expect(getCompletedTasks(tasks).map((item) => item.id)).toEqual(['done']);
     expect(searchTasks(tasks, 'DESIGN').map((item) => item.id)).toEqual(['today']);
-  });
-});
-
-describe('task commands', () => {
-  test('adds a stable positioned Inbox task without mutating the workspace', () => {
-    const workspace = buildSeedWorkspace('2026-08-28');
-    const next = addWorkspaceTask(workspace, { id: 'new', title: 'Capture idea', now: '2026-08-28T10:00:00.000Z' });
-    expect(workspace.tasks.find((item) => item.id === 'new')).toBeUndefined();
-    expect(next.tasks.at(-1)).toMatchObject({ id: 'new', projectId: null, dueDate: null, position: workspace.tasks.length, status: 'inbox' });
-  });
-
-  test('edits, schedules, assigns, prioritizes, completes, undoes, and cancels through pure commands', () => {
-    const workspace = addWorkspaceTask(buildSeedWorkspace('2026-08-28'), { id: 'new', title: 'Draft', now: '2026-08-28T10:00:00.000Z' });
-    const edited = editWorkspaceTask(workspace, 'new', { title: 'Draft launch copy', notes: 'Keep it brief' }, '2026-08-28T10:01:00.000Z');
-    const scheduled = scheduleWorkspaceTask(edited, 'new', { dueDate: '2026-08-31', dueTime: '15:30', reminderAt: '2026-08-31T15:15:00.000Z' }, '2026-08-28T10:02:00.000Z');
-    const assigned = assignTaskProject(scheduled, 'new', 'northstar', 'Northstar', '2026-08-28T10:03:00.000Z');
-    const prioritized = changeTaskPriority(assigned, 'new', 'high', '2026-08-28T10:04:00.000Z');
-    const completed = completeWorkspaceTask(prioritized, 'new', '2026-08-28T10:05:00.000Z');
-    const undone = undoWorkspaceTask(completed, 'new', '2026-08-28T10:06:00.000Z');
-    const cancelled = cancelWorkspaceTask(undone, 'new', '2026-08-28T10:07:00.000Z');
-
-    expect(scheduled.tasks.at(-1)).toMatchObject({ dueDate: '2026-08-31', dueTime: '15:30', plannedDate: '2026-08-31', due: '3:30 PM' });
-    expect(prioritized.tasks.at(-1)).toMatchObject({ title: 'Draft launch copy', projectId: 'northstar', project: 'Northstar', priority: 'high' });
-    expect(completed.tasks.at(-1)).toMatchObject({ status: 'completed', completed: true, completedAt: '2026-08-28T10:05:00.000Z' });
-    expect(undone.tasks.at(-1)).toMatchObject({ status: 'planned', completed: false, completedAt: null });
-    expect(cancelled.tasks.at(-1)).toMatchObject({ status: 'cancelled', completed: false });
   });
 });

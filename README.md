@@ -11,10 +11,32 @@ npm install
 npm start
 ```
 
+## Web and Vercel
+
+Run the browser app locally with `npm run web`, or generate the static site with:
+
+```bash
+npm run web:export
+```
+
+The production Vercel project is [do-it-right-nu.vercel.app](https://do-it-right-nu.vercel.app). Vercel uses `vercel.json` to build `dist` and keep clean URLs working for nested task, project, space, auth, and tool routes.
+
+Deploy the current workspace with:
+
+```bash
+npm run vercel:deploy
+```
+
 Voice capture uses the native `expo-speech-recognition` module and therefore needs a development or release build rather than Expo Go:
 
 ```bash
 npx expo run:android
+```
+
+The direct-install Android preview APK is built with the existing EAS `preview` profile:
+
+```bash
+npm run android:apk
 ```
 
 ## Supabase
@@ -23,14 +45,14 @@ Copy `.env.example` to `.env.local` and provide the project URL and publishable 
 
 ### Auth redirect setup
 
-The native Android/iOS app always sends Supabase to `doitright://auth/callback`. Expo web uses the current browser origin, or the explicit `EXPO_PUBLIC_WEB_AUTH_REDIRECT_URL` value when deployed. This keeps native email links out of `localhost`.
+The native Android/iOS app always sends Supabase to `doitright://auth/callback`. Expo web uses the current browser origin, or the explicit `EXPO_PUBLIC_WEB_AUTH_REDIRECT_URL` value when deployed. Production is configured as `https://do-it-right-nu.vercel.app/auth/callback`.
 
 In Supabase Dashboard → Authentication → URL Configuration, set the Site URL to the public web URL for the deployed web app. If you have no web deployment, use `doitright://auth/callback` as the Site URL for native-only testing. Then add these exact Additional Redirect URLs:
 
 ```text
 doitright://auth/callback
 doitright://invite
-https://YOUR-WEB-DOMAIN/auth/callback
+https://do-it-right-nu.vercel.app/auth/callback
 http://localhost:8081/auth/callback
 ```
 
@@ -44,7 +66,7 @@ For a deployed Expo web build, set this before building:
 EXPO_PUBLIC_WEB_AUTH_REDIRECT_URL=https://YOUR-WEB-DOMAIN/auth/callback
 ```
 
-Keep Email enabled for passwordless one-time links. Apply the database migration and deploy the account functions:
+Keep Email enabled for passwordless sign-in. DIR supports the default Supabase magic-link template and six-digit email OTPs. Apply the database migration and deploy the account functions:
 
 ```bash
 npx supabase login

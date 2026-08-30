@@ -5,7 +5,6 @@ import { Alert, Pressable, ScrollView, Switch, Text, TextInput, View } from 'rea
 import { Glyph } from '@/components/ui/glyph';
 import { COLORS, GUTTER, RADIUS, SHADOW } from '@/constants/theme';
 import { useTasks } from '@/context/task-context';
-import { requestCalendarAccess } from '@/platform/calendar';
 import { requestReminderAccess, scheduleAnchorReminders } from '@/platform/reminders';
 
 const THEMES = ['system', 'light', 'dark'] as const;
@@ -25,13 +24,6 @@ export default function SettingsScreen() {
 
   function saveName() {
     if (name.trim()) updateProfile({ displayName: name.trim() });
-  }
-
-  async function connectCalendar() {
-    setBusy(true);
-    const granted = await requestCalendarAccess();
-    setBusy(false);
-    Alert.alert(granted ? 'Calendar connected' : 'Calendar not connected', granted ? 'DIR will only read today’s commitments to give your plan useful context.' : 'Calendar access is unavailable or was declined. Your planning still works without it.');
   }
 
   async function enableReminders() {
@@ -63,7 +55,7 @@ export default function SettingsScreen() {
 
         <View style={{ gap: 10 }}><Text style={{ color: COLORS.ink, fontSize: 18, fontWeight: '900' }}>Data & access</Text><View style={{ backgroundColor: COLORS.surface, borderRadius: RADIUS.medium, paddingHorizontal: 16, boxShadow: SHADOW }}><Pressable disabled={busy} onPress={() => void syncNow()} style={{ minHeight: 59, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: COLORS.line, opacity: busy ? 0.6 : 1 }}><Glyph name="cloud" size={18} color={COLORS.primary} /><View style={{ flex: 1, gap: 3 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Sync workspace</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>{syncStatus === 'synced' ? 'Everything is up to date' : 'Try cloud sync again'}</Text></View><Glyph name="arrow" size={16} color={COLORS.primary} /></Pressable><Pressable onPress={() => router.push('/account')} style={{ minHeight: 59, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: COLORS.line }}><Glyph name="link" size={18} color={COLORS.muted} /><View style={{ flex: 1, gap: 3 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Keep your workspace</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>{profile.email ? `Linked to ${profile.email}` : 'Link an account when you’re ready'}</Text></View><Glyph name="chevron" size={16} color={COLORS.softMuted} /></Pressable><Pressable disabled={busy} onPress={() => void handleExport()} style={{ minHeight: 59, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: busy ? 0.6 : 1 }}><Glyph name="download" size={18} color={COLORS.muted} /><View style={{ flex: 1, gap: 3 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Export your data</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>A portable copy of your workspace</Text></View><Glyph name="chevron" size={16} color={COLORS.softMuted} /></Pressable></View></View>
 
-        <View style={{ gap: 10 }}><Text style={{ color: COLORS.ink, fontSize: 18, fontWeight: '900' }}>Device context</Text><View style={{ backgroundColor: COLORS.surface, borderRadius: RADIUS.medium, paddingHorizontal: 16, boxShadow: SHADOW }}><Pressable disabled={busy} onPress={() => void connectCalendar()} style={{ minHeight: 61, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: COLORS.line, opacity: busy ? 0.6 : 1 }}><Glyph name="calendar" size={18} color={COLORS.lavenderInk} /><View style={{ flex: 1, gap: 3 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Read-only calendar</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>Show commitments around your plan</Text></View><Glyph name="chevron" size={16} color={COLORS.softMuted} /></Pressable><Pressable disabled={busy} onPress={() => void enableReminders()} style={{ minHeight: 61, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: busy ? 0.6 : 1 }}><Glyph name="bell" size={18} color={COLORS.amber} /><View style={{ flex: 1, gap: 3 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Anchor reminders</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>Morning plan + evening reset</Text></View><Glyph name="chevron" size={16} color={COLORS.softMuted} /></Pressable></View></View>
+        <View style={{ gap: 10 }}><Text style={{ color: COLORS.ink, fontSize: 18, fontWeight: '900' }}>Device context</Text><View style={{ backgroundColor: COLORS.surface, borderRadius: RADIUS.medium, paddingHorizontal: 16, boxShadow: SHADOW }}><Pressable disabled={busy} onPress={() => void enableReminders()} style={{ minHeight: 61, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: busy ? 0.6 : 1 }}><Glyph name="bell" size={18} color={COLORS.amber} /><View style={{ flex: 1, gap: 3 }}><Text style={{ color: COLORS.ink, fontSize: 14, fontWeight: '800' }}>Anchor reminders</Text><Text style={{ color: COLORS.muted, fontSize: 11, fontWeight: '600' }}>Morning plan + evening reset</Text></View><Glyph name="chevron" size={16} color={COLORS.softMuted} /></Pressable></View></View>
 
         <Pressable onPress={() => router.back()} style={{ alignItems: 'center', padding: 8 }}><Text style={{ color: COLORS.muted, fontSize: 13, fontWeight: '800' }}>Done</Text></Pressable>
       </ScrollView></View>

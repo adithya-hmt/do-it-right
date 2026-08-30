@@ -3,15 +3,6 @@ import { getDayKey } from '@/domain/workspace';
 export type NaturalLanguageDateToken = { text: string; kind: 'date' | 'time' };
 export type NaturalLanguageDateResult = { sourceText: string; title: string; tokens: NaturalLanguageDateToken[]; dueDate: string | null; dueTime: string | null };
 
-export interface NaturalLanguageDateParser {
-  parse(text: string, now?: Date): NaturalLanguageDateResult;
-}
-
-export interface TranscriptionAdapter {
-  readonly available: boolean;
-  transcribe(): Promise<string>;
-}
-
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 function addDays(date: Date, days: number) {
@@ -51,5 +42,3 @@ export function parseNaturalLanguageDate(sourceText: string, now = new Date()): 
   if (timeMatch) tokens.push({ text: timeMatch[0], kind: 'time' });
   return { sourceText, title: titleText.replace(/\s+/g, ' ').trim(), tokens, dueDate: getDayKey(date), dueTime };
 }
-
-export const naturalLanguageDateParser: NaturalLanguageDateParser = { parse: parseNaturalLanguageDate };

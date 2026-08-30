@@ -1,0 +1,10 @@
+dist
+.expo
+builds
+android
+ios
+supabase/.temp
+*.log
+.env
+.env.*
+!.env.example

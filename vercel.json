@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx expo export -p web",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/task/:id", "destination": "/task/[id]" },
+    { "source": "/project/:id", "destination": "/project/[id]" },
+    { "source": "/space/:id", "destination": "/space/[id]" }
+  ]
+}

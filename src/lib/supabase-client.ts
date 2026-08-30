@@ -13,7 +13,9 @@ export const supabase = isSupabaseConfigured
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
-        flowType: 'pkce',
+        // The static Expo web build has no server callback. Implicit auth lets
+        // the callback screen consume Supabase's default fragment response.
+        flowType: 'implicit',
       },
     })
   : null;

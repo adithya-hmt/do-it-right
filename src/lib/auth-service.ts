@@ -1,6 +1,9 @@
-import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import type { EmailOtpType, Session, SupabaseClient } from '@supabase/supabase-js';
 
-export type AuthCallback = { code: string } | { accessToken: string; refreshToken: string };
+export type AuthCallback =
+  | { code: string }
+  | { accessToken: string; refreshToken: string }
+  | { tokenHash: string; type: EmailOtpType };
 
 export function formatAuthError(error: unknown, fallback = 'DIR could not complete sign-in.', provider?: 'email' | 'google') {
   const message = error instanceof Error ? error.message : (typeof error === 'object' && error && 'message' in error ? String(error.message) : String(error ?? ''));
@@ -22,27 +25,20 @@ export function formatAuthError(error: unknown, fallback = 'DIR could not comple
 export function parseAuthCallback(url: string): AuthCallback {
   const parsed = new URL(url);
   const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
-  const error = parsed.searchParams.get('error_description') ?? fragment.get('error_description');
+  const error = parsed.searchParams.get('error_description') ?? fragment.get('error_description') ?? parsed.searchParams.get('error') ?? fragment.get('error');
   if (error) throw new Error(error);
   const code = parsed.searchParams.get('code');
   if (code) return { code };
+  const tokenHash = parsed.searchParams.get('token_hash') ?? fragment.get('token_hash');
+  const type = parsed.searchParams.get('type') ?? fragment.get('type');
+  if (tokenHash && type) return { tokenHash, type: type as EmailOtpType };
   const accessToken = fragment.get('access_token') ?? parsed.searchParams.get('access_token');
   const refreshToken = fragment.get('refresh_token') ?? parsed.searchParams.get('refresh_token');
   if (accessToken && refreshToken) return { accessToken, refreshToken };
   throw new Error('DIR could not read the sign-in response.');
 }
 
-export type AuthService = {
-  getSession(): Promise<Session | null>;
-  observeSession(listener: (session: Session | null) => void): () => void;
-  signInWithEmailOtp(email: string, redirectTo: string): Promise<void>;
-  signInWithGoogle(redirectTo: string, openAuthSession: (url: string, redirectTo: string) => Promise<string | null>): Promise<Session | null>;
-  completeAuthUrl(url: string): Promise<Session | null>;
-  signOut(): Promise<void>;
-  deleteAccount(): Promise<void>;
-};
-
-export function createAuthService(client: SupabaseClient): AuthService {
+export function createAuthService(client: SupabaseClient) {
   let callbackInFlight: { url: string; promise: Promise<Session | null> } | null = null;
   let callbackCompleted: { url: string; session: Session | null } | null = null;
 
@@ -54,6 +50,11 @@ export function createAuthService(client: SupabaseClient): AuthService {
       const callback = parseAuthCallback(url);
       if ('code' in callback) {
         const { data, error } = await client.auth.exchangeCodeForSession(callback.code);
+        if (error) throw error;
+        return data.session;
+      }
+      if ('tokenHash' in callback) {
+        const { data, error } = await client.auth.verifyOtp({ token_hash: callback.tokenHash, type: callback.type });
         if (error) throw error;
         return data.session;
       }
@@ -81,15 +82,20 @@ export function createAuthService(client: SupabaseClient): AuthService {
       if (error) throw error;
       return data.session;
     },
-    observeSession(listener) {
+    observeSession(listener: (session: Session | null) => void) {
       const { data } = client.auth.onAuthStateChange((_event, session) => listener(session));
       return () => data.subscription.unsubscribe();
     },
-    async signInWithEmailOtp(email, redirectTo) {
+    async signInWithEmailOtp(email: string, redirectTo: string) {
       const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo, shouldCreateUser: true } });
       if (error) throw error;
     },
-    async signInWithGoogle(redirectTo, openAuthSession) {
+    async verifyEmailOtp(email: string, token: string) {
+      const { data, error } = await client.auth.verifyOtp({ email, token, type: 'email' });
+      if (error) throw error;
+      return data.session;
+    },
+    async signInWithGoogle(redirectTo: string, openAuthSession: (url: string, redirectTo: string) => Promise<string | null>) {
       const { data, error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } });
       if (error) throw error;
       const callbackUrl = await openAuthSession(data.url, redirectTo);
