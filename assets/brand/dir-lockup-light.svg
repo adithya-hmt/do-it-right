@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="title desc">
+  <title id="title">DIR light-surface brand lockup</title>
+  <desc id="desc">The existing DIR right-path deer mark with the DIR wordmark, Do It Right descriptor, and optional tagline for warm light surfaces.</desc>
+  <g id="production-mark" transform="translate(62 58) scale(1.9)">
+    <path fill="#E06A3D" d="M39 105c12-13 18-27 14-42-3-11-12-15-12-27 0-14 11-25 27-25 13 0 23 6 30 17l18 7-14 10c-2 15-15 25-30 25-7 0-12 4-14 11-2 8-1 16 2 24H39Z"/>
+    <path fill="none" stroke="#E06A3D" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="M58 26C48 22 43 15 44 7M60 25c-2-8 0-15 6-21M72 22l9 9 24-24"/>
+    <circle cx="88" cy="36" r="2.7" fill="#1F1F1F"/>
+  </g>
+  <g id="wordmark">
+    <text x="352" y="178" fill="#1F1F1F" font-family="Comfortaa, 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif" font-size="144" font-weight="700" letter-spacing="-7">DIR</text>
+    <text x="364" y="223" fill="#A84422" font-family="'DejaVu Sans Mono', 'SFMono-Regular', Consolas, monospace" font-size="26" font-weight="700" letter-spacing="2.6">DO IT RIGHT</text>
+  </g>
+  <g id="tagline">
+    <line x1="353" y1="249" x2="1112" y2="249" stroke="#D8D0C5" stroke-width="2"/>
+    <text x="354" y="303" fill="#6B665F" font-family="'Clear Sans', 'DejaVu Sans', Arial, sans-serif" font-size="33" font-weight="700">The next right thing.</text>
+  </g>
+</svg>
